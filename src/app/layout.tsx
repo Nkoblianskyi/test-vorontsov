@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import { archivo, newsreader } from "./fonts";
+import { Toaster } from "@/shared/ui/toast";
+import { ConfirmHost } from "@/shared/ui/confirm";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Invoice Studio — template settings",
+  title: { default: "Invoice Studio", template: "%s · Invoice Studio" },
   description:
-    "Set up how invoices look: colours, logo, layout and wording, with a live A4 preview.",
+    "Issue invoices and design how they look: templates with colours, logo and wording, and a live A4 preview.",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
@@ -19,7 +21,11 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           }}
         />
       </head>
-      <body className={`${archivo.variable} ${newsreader.variable}`}>{children}</body>
+      <body className={`${archivo.variable} ${newsreader.variable}`}>
+        {children}
+        <Toaster />
+        <ConfirmHost />
+      </body>
     </html>
   );
 }

@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
-import type { TemplateConfig } from "@/features/template-customizer/model/schema";
+import type { TemplateConfig } from "@/entities/template/model/schema";
 import { mix, readableInk, tint } from "@/shared/lib/color";
+import { documentFonts } from "../ui/document-fonts";
 
 const densityScale = {
   compact: { pad: "14mm", block: "6mm", row: "2.6mm" },
@@ -15,17 +16,19 @@ const ruleWidth = {
 } as const;
 
 /**
- * The whole document is themed through CSS custom properties, so a colour
- * change repaints the sheet without re-rendering the React tree below it.
+ * The Swiss sheet is themed through CSS custom properties, so a colour change
+ * repaints it without re-rendering the React tree below.
  */
-export function documentStyle(config: TemplateConfig): CSSProperties {
+export function swissDocumentStyle(config: TemplateConfig): CSSProperties {
   const density = densityScale[config.density];
   const base = 9.6 * (config.typeScale / 100);
 
   return {
-    "--doc-brand": config.brandColor,
-    "--doc-brand-ink": readableInk(config.brandColor),
-    "--doc-brand-wash": tint(config.brandColor, 0.9),
+    "--doc-brand": config.primaryColor,
+    "--doc-brand-ink": readableInk(config.primaryColor),
+    "--doc-brand-wash": tint(config.primaryColor, 0.9),
+    "--doc-secondary": config.secondaryColor,
+    "--doc-secondary-ink": readableInk(config.secondaryColor),
     "--doc-ink": config.inkColor,
     "--doc-ink-soft": mix(config.inkColor, config.paperTint, 0.42),
     "--doc-paper": config.paperTint,
@@ -35,8 +38,7 @@ export function documentStyle(config: TemplateConfig): CSSProperties {
     "--doc-pad": density.pad,
     "--doc-block": density.block,
     "--doc-row": density.row,
-    "--doc-size": `${base}pt`,
-    fontFamily: config.typeface === "serif" ? "var(--font-serif)" : "var(--font-sans)",
+    fontFamily: documentFonts[config.typeface],
     fontSize: `${base}pt`,
     color: config.inkColor,
     background: config.paperTint,

@@ -4,14 +4,18 @@ import { cn } from "@/shared/lib/cn";
 export function Field({
   label,
   hint,
+  error,
   htmlFor,
+  required,
   children,
   className,
   action,
 }: {
   label: string;
   hint?: React.ReactNode;
+  error?: string;
   htmlFor?: string;
+  required?: boolean;
   children: React.ReactNode;
   className?: string;
   action?: React.ReactNode;
@@ -21,11 +25,23 @@ export function Field({
       <div className="flex items-baseline justify-between gap-3">
         <label htmlFor={htmlFor} className="field-label">
           {label}
+          {required ? (
+            <span className="text-signal" aria-hidden>
+              {" "}
+              *
+            </span>
+          ) : null}
         </label>
         {action}
       </div>
       {children}
-      {hint ? <p className="text-micro text-ink-faint">{hint}</p> : null}
+      {error ? (
+        <p role="alert" className="text-micro text-signal">
+          {error}
+        </p>
+      ) : hint ? (
+        <p className="text-micro text-ink-faint">{hint}</p>
+      ) : null}
     </div>
   );
 }
@@ -53,13 +69,23 @@ export function ToggleRow({
 export function SectionHeading({
   title,
   description,
+  action,
+  index,
 }: {
   title: string;
-  description?: string;
+  description?: React.ReactNode;
+  action?: React.ReactNode;
+  index?: string;
 }) {
   return (
     <div className="border-b border-rule-strong pb-2">
-      <h2 className="text-sm font-semibold tracking-tight text-ink">{title}</h2>
+      <div className="flex items-baseline justify-between gap-3">
+        <h2 className="flex items-baseline gap-2 text-sm font-semibold tracking-tight text-ink">
+          {index ? <span className="tnum text-micro font-medium text-ink-faint">{index}</span> : null}
+          {title}
+        </h2>
+        {action}
+      </div>
       {description ? (
         <p className="mt-1 text-micro leading-relaxed text-ink-soft">{description}</p>
       ) : null}

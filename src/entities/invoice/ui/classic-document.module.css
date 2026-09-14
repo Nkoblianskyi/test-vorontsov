@@ -1,0 +1,195 @@
+/*
+ * Classic layout — reproduces the reference sheet.
+ * Measured from the 1280 px screenshot: 11 px body, 52 px title, 115 px meta
+ * label column, 50/50 address columns, totals block at 41 % of the width.
+ * Sizes are in em so "text size" scales the whole sheet from one number.
+ */
+
+.paper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  padding: 20px 22px 28px 25px;
+  background: var(--c-paper);
+  color: var(--c-ink);
+  border-top: 3px solid var(--c-primary);
+  line-height: 1.43;
+  font-variant-numeric: tabular-nums;
+  text-align: left;
+}
+
+.sheet {
+  width: 210mm;
+  min-height: 297mm;
+  padding: 26px 34px 34px;
+}
+
+/* :where keeps the reset at class specificity, so .meta and friends can set margins. */
+.paper :where(p, h1, dl, dd) {
+  margin: 0;
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.title {
+  font-size: 4.73em;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: -0.012em;
+  color: var(--c-title);
+}
+
+.meta {
+  margin-top: 1.64em;
+}
+
+.metaRow {
+  display: grid;
+  grid-template-columns: 10.45em minmax(0, 1fr);
+  line-height: 1.77;
+}
+
+.metaRow dt {
+  color: var(--c-title);
+}
+
+.parties {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 24px;
+  margin-top: 1.9em;
+}
+
+.party {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.strong {
+  font-weight: 700;
+}
+
+.upper {
+  text-transform: uppercase;
+}
+
+.items {
+  width: 100%;
+  margin-top: 1.8em;
+  border-collapse: collapse;
+}
+
+.items th {
+  padding: 0 0 0.2em;
+  border-bottom: 1px solid var(--c-ink);
+  font-weight: 400;
+  text-align: left;
+  color: var(--c-title);
+  white-space: nowrap;
+}
+
+.items td {
+  padding: 1em 0;
+  border-bottom: 1px solid var(--c-rule);
+  vertical-align: top;
+}
+
+.items th + th,
+.items td + td {
+  padding-left: 12px;
+}
+
+.items .num {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.colItem {
+  width: 19.3%;
+}
+
+.colQty {
+  width: 8%;
+}
+
+.colRate {
+  width: 12%;
+}
+
+.colTotal {
+  width: 13%;
+}
+
+.totals {
+  width: 41%;
+  min-width: 15em;
+  margin-left: auto;
+}
+
+.totalsRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 0.34em 0;
+}
+
+.totalsRow span:last-child {
+  white-space: nowrap;
+}
+
+.totalsStrong {
+  font-weight: 700;
+  border-bottom: 1px solid var(--c-ink);
+}
+
+.block {
+  margin-top: 1.6em;
+  white-space: pre-line;
+}
+
+.block + .block {
+  margin-top: 1.5em;
+}
+
+.caption {
+  color: var(--c-muted);
+}
+
+.payment {
+  margin-top: 2em;
+  padding: 0.8em 1em;
+  border-left: 3px solid var(--c-secondary);
+  background: color-mix(in srgb, var(--c-secondary) 6%, var(--c-paper));
+}
+
+.paymentTitle {
+  margin-bottom: 0.3em;
+  font-weight: 700;
+  color: var(--c-secondary);
+}
+
+.paymentRow {
+  display: grid;
+  grid-template-columns: 9em minmax(0, 1fr);
+  gap: 12px;
+}
+
+.paymentRow span:first-child {
+  color: var(--c-muted);
+}
+
+.footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: auto;
+  padding-top: 2.4em;
+  font-size: 0.9em;
+  color: var(--c-muted);
+}

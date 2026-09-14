@@ -1,69 +1,51 @@
-import type { Invoice } from "../model/invoice";
-import type { TemplateConfig } from "@/features/template-customizer/model/schema";
+export type TotalsInput = {
+  items: { quantity: number; rate: number }[];
+  discount: { type: "percent" | "amount"; value: number };
+  taxes: { name: string; rate: number }[];
+  amountPaid: number;
+};
 
 export type InvoiceTotals = {
+  /** Amount per line, in the same order as `items`. */
+  lines: number[];
   subtotal: number;
   discount: number;
-  taxed: { label: string; rate: number; amount: number }[];
+  net: number;
+  taxes: { name: string; rate: number; amount: number }[];
   total: number;
   paid: number;
   balance: number;
 };
 
-export function calculateTotals(
-  invoice: Invoice,
-  content: TemplateConfig["content"],
-): InvoiceTotals {
-  const subtotal = invoice.items.reduce((sum, item) => sum + item.quantity * item.rate, 0);
-  const discount = content.showDiscount ? (subtotal * invoice.discountRate) / 100 : 0;
-  const net = subtotal - discount;
+const round2 = (value: number) => Math.round((value + Number.EPSILON) * 100) / 100;
+const num = (value: number | undefined) => (Number.isFinite(value) ? (value as number) : 0);
+const sum = (values: number[]) => values.reduce((total, value) => total + value, 0);
 
-  const taxed = content.showTaxes
-    ? invoice.taxes.map((tax) => ({
-        label: tax.label,
-        rate: tax.rate,
-        amount: (net * tax.rate) / 100,
-      }))
-    : [];
+/**
+ * Money is rounded to cents at every step, the way it is printed, so the lines
+ * on the sheet always add up to the total on the sheet.
+ * Inputs may be half-typed form values: empty numbers count as zero.
+ */
+export function computeTotals(input: Partial<TotalsInput>): InvoiceTotals {
+  const lines = (input.items ?? []).map((item) => round2(num(item?.quantity) * num(item?.rate)));
+  const subtotal = round2(sum(lines));
 
-  const total = net + taxed.reduce((sum, tax) => sum + tax.amount, 0);
-  const paid = content.showPaymentMade ? invoice.amountPaid : 0;
+  const discountValue = Math.max(0, num(input.discount?.value));
+  const discount = round2(
+    input.discount?.type === "amount"
+      ? Math.min(discountValue, subtotal)
+      : (subtotal * Math.min(discountValue, 100)) / 100,
+  );
+  const net = round2(subtotal - discount);
 
-  return { subtotal, discount, taxed, total, paid, balance: total - paid };
-}
+  const taxes = (input.taxes ?? []).map((tax) => ({
+    name: tax?.name ?? "",
+    rate: num(tax?.rate),
+    amount: round2((net * num(tax?.rate)) / 100),
+  }));
 
-const currencyLocale: Record<string, string> = {
-  USD: "en-US",
-  EUR: "de-DE",
-  PLN: "pl-PL",
-  UAH: "uk-UA",
-};
+  const total = round2(net + sum(taxes.map((tax) => tax.amount)));
+  const paid = round2(Math.max(0, num(input.amountPaid)));
 
-export function formatMoney(value: number, currency: string): string {
-  return new Intl.NumberFormat(currencyLocale[currency] ?? "en-US", {
-    style: "currency",
-    currency,
-    minimumFractionDigits: 2,
-  }).format(value);
-}
-
-export function formatQuantity(value: number): string {
-  return new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 }).format(value);
-}
-
-export function formatDate(
-  iso: string,
-  format: TemplateConfig["content"]["dateFormat"],
-): string {
-  const date = new Date(`${iso}T00:00:00Z`);
-  if (format === "iso") return iso;
-  if (format === "numeric") {
-    return new Intl.DateTimeFormat("en-GB", { timeZone: "UTC" }).format(date);
-  }
-  return new Intl.DateTimeFormat("en-GB", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-    timeZone: "UTC",
-  }).format(date);
+  return { lines, subtotal, discount, net, taxes, total, paid, balance: round2(total - paid) };
 }

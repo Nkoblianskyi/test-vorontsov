@@ -1,89 +1,58 @@
-# Invoice Studio — invoice template settings
+# Invoice Studio
 
-A working frontend demo of the scenario in the reference: an accountant edits how
-invoices look — name, logo, colours, layout, wording — and sees the result on a real
-A4 sheet while typing. Same meaning, same flow, different visual language.
+Рабочее frontend-демо SaaS-сервиса для выставления счетов. В нём есть список инвойсов, генератор счёта с живым A4-превью и конструктор шаблонов. Конструктор сделан в двух исполнениях:
+
+- **Reference 1:1** — экран из референса, воспроизведённый пиксель в пиксель;
+- **Studio** — собственная визуальная реализация того же экрана. Смысл, состав и пользовательский сценарий сохранены, визуальный язык другой.
+
+Оба редактора работают с одной моделью шаблона. Любой шаблон сразу применяется в генераторе счетов.
+
+> Данные хранятся в `localStorage` браузера, бэкенд не нужен: демо работает сразу после `npm run dev`.
+> Вернуть исходные данные можно в **Settings → Reset demo data**.
+
+## Запуск
 
 ```bash
-npm install                # Node 20.9+ (see .nvmrc)
-npm run dev                # http://localhost:3000 → redirects to /templates/standard
+npm install          # Node 20.9+ (см. .nvmrc)
+npm run dev          # http://localhost:3000 → /invoices
 npm run build && npm start
-npm run lint               # eslint flat config, next/core-web-vitals + typescript
-npm run typecheck          # tsc --noEmit
-npm run format             # prettier
+npm run lint         # eslint (next/core-web-vitals + typescript)
+npm run typecheck    # tsc --noEmit
 ```
 
-`node_modules/` and `.next/` are not in the archive — they are generated. `package-lock.json`
-is, so `npm install` reproduces the exact tree this was built and verified with.
+## Экраны
 
-## What the demo does
+| Маршрут | Что это |
+| --- | --- |
+| `/invoices` | Список счетов. KPI: к оплате, просрочено, оплачено за 30 дней, черновики. Фильтры по статусу, поиск, быстрые действия (оплачен / дублировать / удалить) |
+| `/invoices/new`, `/invoices/[id]` | Генератор счёта: форма слева, живой A4-лист справа. Статусы, печать / PDF, дублирование |
+| `/templates` | Галерея шаблонов с живыми миниатюрами: шаблон по умолчанию, выбор редактора, дублирование, удаление |
+| `/templates/[id]` | **Studio** — собственная реализация экрана «Customize» |
+| `/templates/[id]/reference` | **Reference 1:1** — экран из референса |
+| `/settings` | Реквизиты компании, префикс номера, срок оплаты, валюта, сброс демо-данных |
 
-- **Live A4 preview** with zoom (fit / 50 / 75 / 100 %) — the sheet is measured in
-  millimetres, not abstract card units, so the layout you approve is the layout that prints.
-- **General tab** — presets, template name, brand / text / paper colours with a WCAG
-  contrast read-out, logo upload (drag and drop, 512 KB cap, monogram fallback),
-  typeface, text size, header layout, rule weight, spacing, accent band.
-- **Content tab** — document title, currency, date format, column and totals toggles,
-  terms and closing note with character counts, page footer.
-- **Four presets** that change appearance only and never touch typed content.
-- **Undo / redo** (⌘Z, ⇧⌘Z), **Revert** to the last saved state, **Save** (⌘S) through a
-  server action, **Print or PDF** through the browser print dialog with a dedicated
-  A4 print stylesheet.
-- **Dark interface theme** — the sheet itself stays light in both themes, because it
-  gets printed.
+## Как проверить задание за 5 минут
 
-## Architecture
+1. **Templates** → у «Standard Template» нажмите **Reference 1:1**. Это экран из референса: вкладки General / Content, название шаблона, Primary и Secondary Color, логотип, «Accept payment methods → Manage», превью, Cancel / Save.
+2. Смените цвет или название, выключите логотип. Превью обновляется на каждое нажатие клавиши. **Save** сохраняет и закрывает редактор. **Cancel**, **×** и **Esc** закрывают без сохранения, а при несохранённых изменениях сначала спрашивают.
+3. Вернитесь и нажмите **Customize**. Откроется Studio: тот же шаблон, те же вкладки и поля, но другой визуальный язык. Дополнительно есть пресеты, undo/redo, выбор данных для превью, масштаб A4 и печать.
+4. **New invoice**: выберите недавнего клиента, добавьте строки, скидку и налоги. Итоги и лист пересчитываются вживую. После **Save & mark sent** счёт появится в списке со статусом и сроком оплаты.
+5. В генераторе смените шаблон, и лист перерисуется в другом дизайне. Ссылка **Customize** рядом с выбором шаблона открывает редактор этого шаблона.
 
-```
-src/
-  app/                       route layer only
-    layout.tsx               fonts, pre-paint theme script
-    templates/[id]/page.tsx  RSC: loads the record, hands it to the editor
-    api/templates/[id]/      GET / PATCH for the same repository
-  entities/invoice/          the document: types, sample data, totals, theming, UI
-  features/template-customizer/
-    model/                   zod schema, presets, editor store (RHF + history)
-    ui/                      panel sections, preview stage, topbar
-    actions/                 server action for saving
-  server/                    repository (swap for Prisma/NestJS — nothing above changes)
-  shared/                    ui primitives, colour maths, cn
-```
+## Документация
 
-**One schema, three consumers.** `templateConfigSchema` validates the form
-(`zodResolver`), the server action, and the REST route. A field added to the schema
-cannot silently bypass validation on one of the paths.
+- [docs/ux-spec.md](docs/ux-spec.md) — UX-спецификация: пользователь, сценарии, экраны, состояния, валидация, доступность, адаптив.
+- [docs/reference-1to1.md](docs/reference-1to1.md) — как сделан экран 1:1: снятые метрики и цвета, сверка с референсом, соответствие Reference ↔ Studio.
+- [docs/design-system.md](docs/design-system.md) — визуальный язык Studio: токены, типографика, сетка, компоненты.
+- [docs/architecture.md](docs/architecture.md) — слои, модель данных, рендеринг листа, расчёт сумм, подключение бэкенда.
 
-**The preview is a component, not an iframe or an image.**
-`<InvoiceDocument config invoice />` has no client code, so it renders during SSR with
-the saved configuration — the first paint already shows the real sheet, with no flash
-of defaults — and the same component re-renders on every keystroke in the browser.
+## Стек
 
-**Config → CSS custom properties.** `documentStyle()` turns the configuration into
-variables on the sheet root (`--doc-brand`, `--doc-rule-width`, `--doc-pad`…). Colour and
-spacing changes repaint through CSS instead of re-rendering the tree below.
+Next.js 16 (App Router, Turbopack), React 19, TypeScript (strict), Tailwind CSS 4, react-hook-form + zod, zustand (persist), Radix primitives, lucide-react. Шрифты self-hosted (Archivo, Newsreader).
 
-**History is a stack of snapshots**, pushed 400 ms after the last edit, so dragging a
-slider produces one undo step rather than forty. Undo restores through `form.reset`.
+## Ограничения демо
 
-**Contrast is checked, not assumed.** `auditContrast` reports the WCAG ratio for text on
-the brand block and body text on paper, and warns when a colour choice would ship an
-unreadable invoice — the reference lets you pick white-on-yellow without a word.
-
-## Visual direction
-
-Swiss grid: hairline rules instead of shadows and rounded cards, black ink, one signal
-colour (`#e1301a`) reserved for state — unsaved, revert, destructive — so it never
-competes with the brand colour the user picks for their invoice. Identity element is the
-colour band at the seam between panel and canvas, which doubles as the live brand-colour
-indicator. Type is Archivo (variable, tabular figures) with Newsreader as the serif
-document option; both are self-hosted, so an offline accounting workstation renders
-identical output.
-
-## Notes and limits
-
-- The repository is in-memory: restarting the server resets the template. It is one file
-  behind a stable async interface, so a real database is a drop-in change.
-- Logos are stored as data URLs to keep the demo dependency-free. Production would upload
-  to object storage and keep a URL in the record.
-- Invoice data on the sheet is a fixture. This screen configures the template; issuing
-  invoices is a different screen.
+- Данные живут в `localStorage` этого браузера. Логотип хранится как data URL, до 512 КБ.
+- «Mark as sent» не отправляет письмо: это смена статуса, PDF получается через печать браузера.
+- Оплата картой в «Accept payment methods» симулируется: на лист печатается ссылка на оплату.
+- Интерфейс на английском, как и в референсе; документация на русском.

@@ -1,0 +1,809 @@
+/*
+ * Reference layout, 1:1.
+ * Every number here was measured from the reference screenshot (1280 × 724):
+ * tabs column 144 px, form column 348 px, 48 px headers, 46 px footer,
+ * 24 / 48 px preview gutters, colours sampled pixel by pixel.
+ * The visual language is deliberately not ours: system UI font, rounded
+ * inputs, blue primary — the point of this screen is fidelity.
+ */
+
+.root {
+  --rf-text: #1c2127;
+  --rf-muted: #5f6b7c;
+  --rf-border: #e1e1e1;
+  --rf-focus: #2d72d2;
+  --rf-danger: #cd4246;
+
+  position: fixed;
+  inset: 0;
+  display: flex;
+  background: #ffffff;
+  color: var(--rf-text);
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans",
+    "Helvetica Neue", sans-serif;
+  font-size: 14px;
+  line-height: 1.28581;
+  font-feature-settings: normal;
+  text-align: left;
+  -webkit-font-smoothing: antialiased;
+}
+
+.root :focus-visible {
+  outline: 2px solid rgba(45, 114, 210, 0.6);
+  outline-offset: 2px;
+}
+
+.root ::selection {
+  background: rgba(45, 114, 210, 0.25);
+  color: inherit;
+}
+
+/* macOS-like overlay look: rounded grey thumb, no track, no arrows. */
+.root ::-webkit-scrollbar,
+.menu::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.root ::-webkit-scrollbar-thumb,
+.menu::-webkit-scrollbar-thumb {
+  background-color: rgba(17, 20, 24, 0.22);
+  background-clip: content-box;
+  border: 2px solid transparent;
+  border-radius: 8px;
+}
+
+.root ::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(17, 20, 24, 0.4);
+}
+
+/* ------------------------------------------------------------ columns */
+
+.customize {
+  display: grid;
+  grid-template-rows: 48px minmax(0, 1fr);
+  width: 493px;
+  flex-shrink: 0;
+  border-right: 1px solid #e6e6e6;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  height: 48px;
+  border-bottom: 1px solid var(--rf-border);
+  background: #ffffff;
+}
+
+.customize .head {
+  padding-left: 161px;
+}
+
+.headTitle {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 24px;
+  color: #5c5c5c;
+}
+
+.body {
+  display: grid;
+  grid-template-columns: 144px minmax(0, 1fr);
+  min-height: 0;
+}
+
+.tabs {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-top: 3px;
+  border-right: 1px solid #e9e9e9;
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  height: 34px;
+  margin: 0 5px 0 4px;
+  padding: 0 9px;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--rf-text);
+  font: inherit;
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.tab:hover {
+  background: rgba(143, 153, 168, 0.15);
+}
+
+.tabActive,
+.tabActive:hover {
+  background: #d4e2fe;
+  color: #1d4f9c;
+}
+
+.panel {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  min-height: 0;
+}
+
+.scroll {
+  overflow-y: auto;
+  padding: 14px 17px 28px;
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 9px;
+  height: 46px;
+  padding: 0 14px;
+  border-top: 1px solid #e4e4e4;
+  background: #ffffff;
+}
+
+.preview {
+  display: grid;
+  grid-template-rows: 48px minmax(0, 1fr);
+  flex: 1;
+  min-width: 0;
+}
+
+.preview .head {
+  justify-content: space-between;
+  padding: 0 4px 0 17px;
+}
+
+.close {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: #111111;
+  cursor: pointer;
+}
+
+.close:hover {
+  background: rgba(143, 153, 168, 0.15);
+}
+
+.previewBody {
+  overflow-y: auto;
+  /* The reference has overlay scrollbars. Here the 8 px bar has a reserved gutter and
+     the right padding gives the same 8 px back, so the sheet is 691 px either way. */
+  scrollbar-gutter: stable;
+  padding: 23px 40px 48px 48px;
+  background: #f4f6f5;
+}
+
+.paper {
+  overflow: hidden;
+  border-radius: 5px;
+  background: #ffffff;
+  box-shadow:
+    0 0 0 1px rgba(17, 20, 24, 0.035),
+    0 1px 6px rgba(17, 20, 24, 0.07);
+}
+
+.fitSheet {
+  display: flex;
+  justify-content: center;
+}
+
+/* ------------------------------------------------------------ type */
+
+.sectionTitle {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 20px;
+  color: var(--rf-text);
+}
+
+.sectionDesc {
+  max-width: 290px;
+  margin: 6px 0 0;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--rf-muted);
+}
+
+.group {
+  margin-top: 22px;
+}
+
+.label {
+  display: block;
+  margin: 0 0 4px;
+  font-size: 13px;
+  line-height: 16px;
+  color: #222222;
+}
+
+.required {
+  color: var(--rf-danger);
+}
+
+.hint {
+  margin: 4px 0 0;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--rf-muted);
+}
+
+.error {
+  margin: 4px 0 0;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--rf-danger);
+}
+
+/* ------------------------------------------------------------ controls */
+
+.input,
+.select,
+.textarea {
+  display: block;
+  width: 100%;
+  height: 30px;
+  padding: 0 10px;
+  border: 1px solid #dcdcdc;
+  border-radius: 3px;
+  background: #ffffff;
+  box-shadow: inset 0 1px 1px rgba(17, 20, 24, 0.06);
+  font: inherit;
+  font-size: 13px;
+  color: #111111;
+  outline: none;
+  transition:
+    border-color 0.1s,
+    box-shadow 0.1s;
+}
+
+.textarea {
+  height: auto;
+  min-height: 72px;
+  padding: 6px 10px;
+  line-height: 18px;
+  resize: vertical;
+}
+
+.select {
+  appearance: none;
+  padding-right: 28px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath fill='%235f6b7c' d='M4.5 6l3.5 4 3.5-4z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 7px center;
+}
+
+.input:focus,
+.select:focus,
+.textarea:focus,
+.colorInput:focus-within {
+  border-color: var(--rf-focus);
+  box-shadow:
+    inset 0 0 0 1px var(--rf-focus),
+    0 0 0 2px rgba(45, 114, 210, 0.25);
+}
+
+.input:disabled {
+  background: #f6f7f9;
+  color: #8f99a8;
+  box-shadow: none;
+}
+
+.invalid,
+.invalid:focus {
+  border-color: var(--rf-danger);
+  box-shadow: inset 0 0 0 1px var(--rf-danger);
+}
+
+.colorRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 22px;
+}
+
+.colorRow + .colorRow {
+  margin-top: 14px;
+}
+
+.colorRow .label {
+  margin: 0;
+}
+
+.colorInput {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 104px;
+  height: 30px;
+  padding: 0 8px 0 6px;
+  border: 1px solid #dcdcdc;
+  border-radius: 3px;
+  background: #ffffff;
+  box-shadow: inset 0 1px 1px rgba(17, 20, 24, 0.06);
+}
+
+.swatch {
+  position: relative;
+  width: 13px;
+  height: 13px;
+  flex-shrink: 0;
+  overflow: hidden;
+  border-radius: 2px;
+  box-shadow: inset 0 0 0 1px rgba(17, 20, 24, 0.12);
+  cursor: pointer;
+}
+
+.swatch input {
+  position: absolute;
+  inset: -8px;
+  width: 32px;
+  height: 32px;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.hex {
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 13px;
+  color: #222222;
+  outline: none;
+}
+
+.logoGroup {
+  margin-top: 15px;
+}
+
+.logoGroup > .label {
+  margin-bottom: 10px;
+}
+
+.switchRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 16px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 13px;
+  line-height: 16px;
+  color: var(--rf-text);
+  text-align: left;
+  cursor: pointer;
+}
+
+.switchRow:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.track {
+  position: relative;
+  width: 26px;
+  height: 15px;
+  flex-shrink: 0;
+  border-radius: 8px;
+  background: rgba(143, 153, 168, 0.35);
+  transition: background 0.12s;
+}
+
+.track::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow:
+    0 0 0 1px rgba(17, 20, 24, 0.08),
+    0 1px 1px rgba(17, 20, 24, 0.2);
+  transition: transform 0.12s;
+}
+
+.switchRow[aria-checked="true"] > .track {
+  background: #106ef6;
+}
+
+.switchRow[aria-checked="true"] > .track::after {
+  transform: translateX(11px);
+}
+
+.logoBox {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 104px;
+  padding: 0;
+  border: 1px solid #e5e5e5;
+  border-radius: 4px;
+  background: #ffffff;
+  font: inherit;
+  cursor: pointer;
+}
+
+.logoBoxDragging {
+  border-color: var(--rf-focus);
+  border-style: dashed;
+  background: #f5f8fe;
+}
+
+.logoActions {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.12s;
+}
+
+.logoWrap:hover .logoActions,
+.logoWrap:focus-within .logoActions {
+  opacity: 1;
+}
+
+.logoWrap {
+  position: relative;
+  margin-top: 18px;
+}
+
+.logoAction {
+  height: 24px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 3px;
+  background: rgba(17, 20, 24, 0.75);
+  color: #ffffff;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.paymentBox {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  height: 34px;
+  margin-top: 18px;
+  padding: 0 10px 0 9px;
+  border: 1px solid #eceeed;
+  border-radius: 3px;
+  background: #fafcfb;
+  font-size: 13px;
+}
+
+.paymentBox svg {
+  flex-shrink: 0;
+  color: #737a82;
+}
+
+.paymentMeta {
+  color: var(--rf-muted);
+  font-size: 12px;
+}
+
+.link {
+  margin-left: auto;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 13px;
+  color: #215db0;
+  cursor: pointer;
+}
+
+.link:hover {
+  text-decoration: underline;
+}
+
+.btn {
+  height: 28px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 3px;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.btnCancel {
+  min-width: 60px;
+  background: #e8eef9;
+  color: #404854;
+}
+
+.btnCancel:hover {
+  background: #dce5f5;
+}
+
+.btnPrimary {
+  min-width: 65px;
+  background: #0352cb;
+  color: #ffffff;
+  font-weight: 500;
+}
+
+.btnPrimary:hover {
+  background: #0247b3;
+}
+
+.btnDanger {
+  background: #cd4246;
+  color: #ffffff;
+}
+
+.btnDanger:hover {
+  background: #ac2f33;
+}
+
+/* ------------------------------------------------------------ content tab */
+
+.fieldGroup {
+  margin-top: 24px;
+}
+
+.groupTitle {
+  margin: 0 0 2px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 16px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--rf-muted);
+}
+
+.fieldRow {
+  padding: 9px 0;
+  border-bottom: 1px solid #eef0f2;
+}
+
+.fieldRow:last-child {
+  border-bottom: 0;
+}
+
+.fieldRow .input {
+  height: 28px;
+  margin-top: 8px;
+}
+
+/* ------------------------------------------------------------ dialog */
+
+.dialog {
+  width: min(92vw, 500px);
+  margin: auto;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: #f6f7f9;
+  color: var(--rf-text);
+  box-shadow:
+    0 0 0 1px rgba(17, 20, 24, 0.1),
+    0 4px 8px rgba(17, 20, 24, 0.2),
+    0 18px 46px 6px rgba(17, 20, 24, 0.2);
+}
+
+.dialog::backdrop {
+  background: rgba(17, 20, 24, 0.7);
+}
+
+.dialogHead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 5px 0 20px;
+  border-radius: 4px 4px 0 0;
+  background: #ffffff;
+  box-shadow: 0 1px 0 rgba(17, 20, 24, 0.15);
+}
+
+.dialogTitle {
+  flex: 1;
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 20px;
+}
+
+.dialogBody {
+  padding: 20px;
+  font-size: 13px;
+  line-height: 18px;
+}
+
+.dialogFoot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 0 20px 20px;
+}
+
+.method {
+  padding: 12px;
+  border: 1px solid #e5e8eb;
+  border-radius: 3px;
+  background: #ffffff;
+}
+
+.method + .method {
+  margin-top: 8px;
+}
+
+.methodHead {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.methodHead > svg {
+  margin-top: 1px;
+  flex-shrink: 0;
+  color: #5f6b7c;
+}
+
+.methodText {
+  flex: 1;
+  min-width: 0;
+}
+
+.methodTitle {
+  margin: 0;
+  font-weight: 600;
+}
+
+.methodDesc {
+  margin: 2px 0 0;
+  color: var(--rf-muted);
+}
+
+.methodBody {
+  margin: 10px 0 0 26px;
+}
+
+.alert {
+  display: flex;
+  gap: 14px;
+}
+
+.alert > svg {
+  flex-shrink: 0;
+  color: #c87619;
+}
+
+/* ------------------------------------------------------------ dropdown */
+
+.selectTrigger {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-right: 8px;
+  background-image: none;
+  text-align: left;
+  cursor: pointer;
+}
+
+.selectTrigger[aria-expanded="true"] {
+  border-color: var(--rf-focus);
+  box-shadow:
+    inset 0 0 0 1px var(--rf-focus),
+    0 0 0 2px rgba(45, 114, 210, 0.25);
+}
+
+.menu {
+  overflow-y: auto;
+  padding: 5px;
+  border-radius: 3px;
+  background: #ffffff;
+  box-shadow:
+    0 0 0 1px rgba(17, 20, 24, 0.1),
+    0 2px 4px rgba(17, 20, 24, 0.2),
+    0 8px 24px rgba(17, 20, 24, 0.2);
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans",
+    "Helvetica Neue", sans-serif;
+  font-size: 13px;
+  line-height: 20px;
+  color: #1c2127;
+  list-style: none;
+  outline: none;
+}
+
+.menuOption {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 7px;
+  border-radius: 2px;
+  cursor: pointer;
+}
+
+.menuOptionActive {
+  background: rgba(143, 153, 168, 0.15);
+}
+
+.menuOptionSelected,
+.menuOptionSelected.menuOptionActive {
+  background: #2d72d2;
+  color: #ffffff;
+}
+
+.menuGroup {
+  padding: 6px 7px 2px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #5f6b7c;
+}
+
+.menuDescription {
+  margin-left: auto;
+  padding-left: 16px;
+  font-size: 12px;
+  color: #5f6b7c;
+}
+
+.menuOptionSelected .menuDescription {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* ------------------------------------------------------------ narrow screens */
+
+@media (max-width: 900px) {
+  .root {
+    position: static;
+    flex-direction: column;
+    min-height: 100dvh;
+  }
+
+  .customize {
+    width: 100%;
+    border-right: 0;
+    border-bottom: 1px solid #e6e6e6;
+  }
+
+  .customize .head {
+    padding-left: 16px;
+  }
+
+  .body {
+    grid-template-columns: 112px minmax(0, 1fr);
+  }
+
+  .scroll {
+    overflow: visible;
+  }
+
+  .preview {
+    min-height: 80dvh;
+  }
+
+  .previewBody {
+    padding: 16px;
+  }
+}
