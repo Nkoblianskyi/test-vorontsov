@@ -113,14 +113,14 @@ export function TemplatesView() {
         />
       </div>
 
-      <ul className="grid gap-px border border-rule bg-rule sm:grid-cols-2 xl:grid-cols-3">
+      <ul className="grid grid-cols-[minmax(0,1fr)] gap-px border border-rule bg-rule sm:grid-cols-2 xl:grid-cols-3">
         {templates.map((template) => {
           const isDefault = template.id === defaultId;
           const count = usage.get(template.id) ?? 0;
           const other = preference === "studio" ? "reference" : "studio";
 
           return (
-            <li key={template.id} className="flex flex-col bg-panel">
+            <li key={template.id} className="flex min-w-0 flex-col bg-panel">
               <button
                 type="button"
                 onClick={() => open(template)}

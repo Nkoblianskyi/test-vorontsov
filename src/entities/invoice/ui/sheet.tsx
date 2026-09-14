@@ -85,7 +85,9 @@ export function SheetThumbnail({
       {scale > 0 ? (
         <div
           inert
-          className="pointer-events-none select-none"
+          // Absolute: the 794 px sheet must not count towards the box's intrinsic width,
+          // or an auto-sized grid column (a phone layout) grows to fit it.
+          className="pointer-events-none absolute top-0 left-0 select-none"
           style={{
             width: SHEET_WIDTH,
             transform: `scale(${scale})`,

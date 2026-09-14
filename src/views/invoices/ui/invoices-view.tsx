@@ -129,12 +129,9 @@ export function InvoicesView() {
       <KpiStrip rows={rows} today={today} currency={invoicing.currency} />
 
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <div
-          role="group"
-          aria-label="Filter invoices"
-          className="flex overflow-x-auto border border-rule bg-panel"
-        >
-          {invoiceFilters.map((item, index) => {
+        {/* Chips wrap onto a second line on phones: no sideways scrolling strip. */}
+        <div role="group" aria-label="Filter invoices" className="flex flex-wrap gap-1.5">
+          {invoiceFilters.map((item) => {
             const active = filter === item.value;
             return (
               <button
@@ -143,11 +140,10 @@ export function InvoicesView() {
                 aria-pressed={active}
                 onClick={() => setFilter(item.value)}
                 className={cn(
-                  "flex shrink-0 items-center gap-2 px-3 py-2 text-[0.8125rem] transition-colors",
-                  index > 0 && "border-l border-rule",
+                  "flex items-center gap-2 border px-3 py-1.5 text-[0.8125rem] transition-colors",
                   active
-                    ? "bg-ink text-panel"
-                    : "text-ink-soft hover:bg-panel-sunken hover:text-ink",
+                    ? "border-ink bg-ink text-panel"
+                    : "border-rule bg-panel text-ink-soft hover:border-ink hover:text-ink",
                 )}
               >
                 {item.label}

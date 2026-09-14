@@ -54,6 +54,9 @@
   }
 
   body {
+    /* Safety net: nothing may widen the page on a phone. `clip`, unlike `hidden`,
+       creates no scroll container, so sticky headers keep working. */
+    overflow-x: clip;
     background: var(--color-canvas);
     color: var(--color-ink);
     font-family: var(--font-sans);
