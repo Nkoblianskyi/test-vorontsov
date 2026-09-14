@@ -12,7 +12,13 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    // The font variables go on <html>: the theme's --font-sans / --font-serif live on
+    // :root and reference them, so they must already be defined at that level.
+    <html
+      lang="en"
+      suppressHydrationWarning
+      className={`${archivo.variable} ${newsreader.variable}`}
+    >
       <head>
         <script
           // Applies the stored interface theme before first paint.
@@ -21,7 +27,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           }}
         />
       </head>
-      <body className={`${archivo.variable} ${newsreader.variable}`}>
+      <body>
         {children}
         <Toaster />
         <ConfirmHost />

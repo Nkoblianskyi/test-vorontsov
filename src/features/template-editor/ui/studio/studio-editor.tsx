@@ -17,6 +17,7 @@ import { toast } from "@/shared/ui/toast";
 import { focusField } from "@/shared/lib/focus-field";
 import { formatTimestamp } from "@/shared/lib/format";
 
+import { studioTarget } from "../../lib/pick-targets";
 import {
   TemplateEditorProvider,
   useTemplateEditor,
@@ -31,45 +32,8 @@ import { TemplateNotFound } from "../template-not-found";
 import { GeneralSection } from "./general-section";
 import { ContentSection } from "./content-section";
 
-type Target = { tab: EditorTab; id: string };
-
-const pickTargets: Record<string, Target> = {
-  title: { tab: "content", id: "document-title" },
-  logo: { tab: "general", id: "section-logo" },
-  payment: { tab: "general", id: "section-payments" },
-  terms: { tab: "content", id: "default-terms" },
-  statement: { tab: "content", id: "default-statement" },
-  "meta.number": { tab: "content", id: "field-row-invoiceNumber" },
-  "meta.issueDate": { tab: "content", id: "field-row-issueDate" },
-  "meta.dueDate": { tab: "content", id: "field-row-dueDate" },
-  "meta.reference": { tab: "content", id: "field-row-reference" },
-  seller: { tab: "content", id: "field-row-companyAddress" },
-  labels: { tab: "content", id: "field-row-itemName" },
-  subtotal: { tab: "content", id: "field-row-subtotal" },
-  discount: { tab: "content", id: "field-row-discount" },
-  total: { tab: "content", id: "field-row-total" },
-  paid: { tab: "content", id: "field-row-paymentMade" },
-  balance: { tab: "content", id: "field-row-balanceDue" },
-  footer: { tab: "content", id: "field-row-pageFooter" },
-};
-
-/** In a template, a click on the sheet leads to the setting that shapes that spot. */
-function studioTarget(key: string): Target | null {
-  if (pickTargets[key]) return pickTargets[key];
-  if (key.startsWith("buyer")) return { tab: "content", id: "field-row-billedTo" };
-  if (key.startsWith("tax.")) return { tab: "content", id: "field-row-taxes" };
-  const item = /^item\.\d+\.(\w+)$/.exec(key);
-  if (item) {
-    const rows: Record<string, string> = {
-      name: "field-row-itemName",
-      description: "field-row-itemDescription",
-      quantity: "field-row-itemQuantity",
-      rate: "field-row-itemRate",
-    };
-    return { tab: "content", id: rows[item[1]] ?? "field-row-itemName" };
-  }
-  return null;
-}
+/** Time for the mobile preview to close before scrolling the panel under it. */
+const SHEET_CLOSE_DELAY = 220;
 
 function useLeaveGuard() {
   const router = useRouter();
@@ -252,11 +216,12 @@ function StudioLayout() {
     const wait = previewOpen || tab !== target.tab;
     setPreviewOpen(false);
     setTab(target.tab);
-    window.setTimeout(() => focusField(target.id), wait ? 220 : 0);
+    window.setTimeout(() => focusField(target.id), wait ? SHEET_CLOSE_DELAY : 0);
   };
 
   const sheet = <InvoiceDocument config={config} data={data} />;
   const picker = <PreviewSourcePicker value={source} onChange={setSource} />;
+  const name = config.name?.trim() || "Untitled template";
 
   return (
     <div data-print="shell" className="flex h-dvh flex-col overflow-clip">
@@ -306,9 +271,7 @@ function StudioLayout() {
           />
           <div className="min-w-0">
             <p className="field-label">Live preview</p>
-            <p className="truncate text-sm font-medium">
-              {config.name?.trim() || "Untitled template"}
-            </p>
+            <p className="truncate text-sm font-medium">{name}</p>
           </div>
         </div>
       </MobilePreviewBar>
@@ -318,9 +281,7 @@ function StudioLayout() {
         onClose={closePreview}
         title={
           <>
-            <p className="truncate text-sm font-semibold">
-              {config.name?.trim() || "Untitled template"}
-            </p>
+            <p className="truncate text-sm font-semibold">{name}</p>
             <p className="truncate text-micro text-ink-faint">
               Tap the sheet to find its setting
             </p>

@@ -41,6 +41,13 @@ export const PAYMENT_TERMS = [
   { days: 30, label: "Net 30" },
 ] as const;
 
+const AUTOSAVE_DELAY_MS = 700;
+
+/** Autosave progress, for the status line. */
+export type SaveState = "idle" | "saving" | "saved" | "invalid";
+
+const invoiceRoute = (id: string) => `/invoices/${id}`;
+
 function blankInvoice(
   invoices: InvoiceRecord[],
   invoicing: InvoicingDefaults,
@@ -65,9 +72,15 @@ function blankInvoice(
   };
 }
 
-function successMessage(input: InvoiceInput, existing: InvoiceRecord | null) {
-  const wasDraft = (existing?.status ?? "draft") === "draft";
-  if (input.status === "paid" && existing?.status !== "paid") {
+/** A paid invoice that owes money again (lines added, payment lowered) is open again. */
+function reopenIfOwed(input: InvoiceInput): { input: InvoiceInput; reopened: boolean } {
+  const reopened = input.status === "paid" && computeTotals(input).balance > 0.005;
+  return { input: reopened ? { ...input, status: "sent" } : input, reopened };
+}
+
+function successMessage(input: InvoiceInput, record: InvoiceRecord | null) {
+  const wasDraft = (record?.status ?? "draft") === "draft";
+  if (input.status === "paid" && record?.status !== "paid") {
     return { title: `${input.number} marked as paid` };
   }
   if (input.status === "sent" && wasDraft) {
@@ -77,17 +90,27 @@ function successMessage(input: InvoiceInput, existing: InvoiceRecord | null) {
         "Email delivery is simulated here. Print or save the PDF to send it yourself.",
     };
   }
-  return { title: existing ? "Invoice saved" : `${input.number} saved as draft` };
+  return { title: record ? "Invoice saved" : `${input.number} saved as draft` };
 }
 
+type Options = {
+  /** Lets the screen reveal the form, e.g. close a preview that covers it. */
+  onInvalid: () => void;
+  /** Save quietly shortly after every valid change instead of waiting for "Save". */
+  autosave?: boolean;
+  /** Where an invoice lives on this screen: used after create and duplicate. Keep it stable. */
+  routeFor?: (id: string) => string;
+  /** Where to go after deleting. */
+  homeHref?: string;
+};
+
 /**
- * Everything the invoice screen does, without the markup: the form, dirty
- * tracking, saving with status changes, and the small smart defaults.
- * `onInvalid` lets the screen reveal the form (e.g. close the mobile preview).
+ * Everything an invoice screen does, without the markup: the form, dirty
+ * tracking, saving with status changes (manual or autosave) and smart defaults.
  */
 export function useInvoiceEditor(
   existing: InvoiceRecord | null,
-  { onInvalid }: { onInvalid: () => void },
+  { onInvalid, autosave = false, routeFor = invoiceRoute, homeHref = "/invoices" }: Options,
 ) {
   const router = useRouter();
   const invoices = useInvoicesStore((state) => state.invoices);
@@ -106,19 +129,26 @@ export function useInvoiceEditor(
         ),
   );
   const [saved, setSaved] = React.useState(initial);
+  /** Set on open for existing invoices, and when autosave creates a new one. */
+  const [recordId, setRecordId] = React.useState<string | null>(existing?.id ?? null);
+  const [saveState, setSaveState] = React.useState<SaveState>(existing ? "saved" : "idle");
+  const record = recordId
+    ? (invoices.find((invoice) => invoice.id === recordId) ?? null)
+    : null;
 
   const form = useForm<InvoiceInput>({
     defaultValues: initial,
     resolver: zodResolver(invoiceSchema),
     mode: "onTouched",
   });
+  // useWatch is typed deep-partial; defaults are complete and fields never unregister.
   const values = useWatch({ control: form.control }) as InvoiceInput;
 
   const dirty = !deepEqual(saved, values);
   const template = resolveTemplate(templates, values.templateId, defaultTemplateId);
   const totals = computeTotals(values);
-  const status = existing
-    ? displayStatus(existing, computeTotals(existing).balance, todayIso())
+  const status = record
+    ? displayStatus(record, computeTotals(record).balance, todayIso())
     : null;
 
   useUnsavedChangesGuard(dirty);
@@ -135,12 +165,55 @@ export function useInvoiceEditor(
     return [...seen.values()].slice(0, 5);
   }, [invoices]);
 
+  // --- autosave -------------------------------------------------------------------
+
+  React.useEffect(() => {
+    if (!autosave || !dirty) return;
+
+    const timer = window.setTimeout(async () => {
+      setSaveState("saving");
+      const valid = await form.trigger();
+      const store = useInvoicesStore.getState();
+      const raw = structuredClone(form.getValues());
+
+      if (isNumberTaken(store.invoices, raw.number, recordId ?? undefined)) {
+        form.setError("number", { message: "Another invoice already uses this number" });
+        setSaveState("invalid");
+        return;
+      }
+      if (!valid) {
+        setSaveState("invalid");
+        return;
+      }
+
+      const { input } = reopenIfOwed(raw);
+      if (input.status !== raw.status) form.setValue("status", input.status);
+
+      const next = recordId ? store.update(recordId, input) : store.create(input);
+      if (!next) {
+        setSaveState("invalid");
+        return;
+      }
+      if (!recordId) {
+        setRecordId(next.id);
+        // Keep the address bar in sync without remounting the screen mid-typing.
+        window.history.replaceState(null, "", routeFor(next.id));
+      }
+      setSaved(input);
+      setSaveState("saved");
+    }, AUTOSAVE_DELAY_MS);
+
+    return () => window.clearTimeout(timer);
+  }, [autosave, dirty, values, form, recordId, routeFor]);
+
+  // --- navigation -----------------------------------------------------------------
+
   const leave = async (href: string) => {
     if (dirty) {
       const confirmed = await requestConfirm({
-        title: existing ? "Leave without saving?" : "Discard this invoice?",
-        description: existing
-          ? "Your changes to this invoice will be lost."
+        title: record ? "Leave without saving?" : "Discard this invoice?",
+        description: record
+          ? "Your latest changes to this invoice will be lost."
           : "The invoice hasn't been saved yet. Save it as a draft to keep it.",
         confirmLabel: "Discard",
         tone: "danger",
@@ -150,7 +223,7 @@ export function useInvoiceEditor(
     router.push(href);
   };
 
-  // --- saving -------------------------------------------------------------------
+  // --- saving ---------------------------------------------------------------------
 
   const commit = (
     nextStatus: InvoiceStatus | null,
@@ -160,7 +233,7 @@ export function useInvoiceEditor(
       (formValues) => {
         const store = useInvoicesStore.getState();
 
-        if (isNumberTaken(store.invoices, formValues.number, existing?.id)) {
+        if (isNumberTaken(store.invoices, formValues.number, record?.id)) {
           onInvalid();
           form.setError(
             "number",
@@ -174,30 +247,29 @@ export function useInvoiceEditor(
           return;
         }
 
-        let input: InvoiceInput = {
+        const { input, reopened } = reopenIfOwed({
           ...formValues,
           ...patch?.(formValues),
           status: nextStatus ?? formValues.status,
-        };
-        // A paid invoice that owes money again (lines added, payment lowered) is open again.
-        const reopened = input.status === "paid" && computeTotals(input).balance > 0.005;
-        if (reopened) input = { ...input, status: "sent" };
+        });
         const message = reopened
           ? {
               title: `${input.number} is open again`,
               description: "Its balance is no longer zero, so it moved back to Sent.",
             }
-          : successMessage(input, existing);
+          : successMessage(input, record);
 
-        if (existing) {
-          store.update(existing.id, input);
+        if (record) {
+          store.update(record.id, input);
           form.reset(input);
           setSaved(input);
         } else {
-          const record = store.create(input);
+          const created = store.create(input);
           setSaved(input);
-          router.replace(`/invoices/${record.id}`);
+          setRecordId(created.id);
+          router.replace(routeFor(created.id));
         }
+        setSaveState("saved");
         toast(message.title, { tone: "positive", description: message.description });
       },
       (formErrors) => {
@@ -214,22 +286,22 @@ export function useInvoiceEditor(
     commit("paid", (formValues) => ({ amountPaid: computeTotals(formValues).total }));
 
   const remove = async () => {
-    if (!existing) return;
+    if (!record) return;
     const confirmed = await requestConfirm({
-      title: `Delete ${existing.number}?`,
+      title: `Delete ${record.number}?`,
       description: "The invoice disappears from the list. This can't be undone.",
       confirmLabel: "Delete invoice",
       tone: "danger",
     });
     if (!confirmed) return;
     setSaved(values);
-    useInvoicesStore.getState().remove(existing.id);
-    router.push("/invoices");
-    toast(`${existing.number} deleted`);
+    useInvoicesStore.getState().remove(record.id);
+    router.push(homeHref);
+    toast(`${record.number} deleted`);
   };
 
   const duplicate = async () => {
-    if (!existing) return;
+    if (!record) return;
     if (dirty) {
       const proceed = await requestConfirm({
         title: "Duplicate the saved version?",
@@ -238,16 +310,16 @@ export function useInvoiceEditor(
       });
       if (!proceed) return;
     }
-    const copy = useInvoicesStore.getState().duplicate(existing.id, invoicing.prefix);
+    const copy = useInvoicesStore.getState().duplicate(record.id, invoicing.prefix);
     if (!copy) return;
     setSaved(values);
-    router.push(`/invoices/${copy.id}`);
+    router.push(routeFor(copy.id));
     toast(`Duplicated as ${copy.number}`, {
       description: "Saved as a draft with today's date.",
     });
   };
 
-  // --- smart defaults -----------------------------------------------------------
+  // --- smart defaults -------------------------------------------------------------
 
   const changeTemplate = (nextId: string) => {
     const previous = resolveTemplate(
@@ -289,9 +361,12 @@ export function useInvoiceEditor(
   return {
     form,
     values,
-    existing,
+    /** The saved record, if any. `existing` is kept as an alias for screens written before autosave. */
+    record,
+    existing: record,
     dirty,
     status,
+    saveState,
     totals,
     customers,
     template,

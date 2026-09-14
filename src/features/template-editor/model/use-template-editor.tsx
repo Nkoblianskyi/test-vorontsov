@@ -29,6 +29,11 @@ export type EditorTab = "general" | "content";
 
 type History = { stack: TemplateConfig[]; index: number };
 
+type SaveOptions = {
+  /** For autosave: no toasts, no tab switching; the caller shows its own status. */
+  silent?: boolean;
+};
+
 function record(history: History, config: TemplateConfig): History {
   const stack = [
     ...history.stack.slice(0, history.index + 1),
@@ -53,7 +58,7 @@ type EditorContextValue = {
   revert: () => void;
   applyPreset: (preset: TemplatePreset) => void;
   activePresetId: string | null;
-  save: () => Promise<boolean>;
+  save: (options?: SaveOptions) => Promise<boolean>;
 };
 
 const EditorContext = React.createContext<EditorContextValue | null>(null);
@@ -77,14 +82,18 @@ function isTextTarget(target: EventTarget | null): boolean {
 }
 
 /**
- * Shared by both editors (reference layout and Studio): one form, one history,
- * one save path. The two UIs differ only in how they draw these controls.
+ * Shared by every template UI (reference layout, Studio, the composer's design
+ * panel): one form, one history, one save path. The UIs differ only in how they
+ * draw these controls.
  */
 export function TemplateEditorProvider({
   template,
+  keyboard = true,
   children,
 }: {
   template: TemplateRecord;
+  /** Ctrl+S / Ctrl+Z shortcuts. Off where another form owns the keyboard. */
+  keyboard?: boolean;
   children: React.ReactNode;
 }) {
   const templateId = template.id;
@@ -154,34 +163,39 @@ export function TemplateEditorProvider({
   }, [pending, history, goTo]);
 
   // --- actions ---------------------------------------------------------------
-  const save = React.useCallback(async () => {
-    const valid = await form.trigger();
+  const save = React.useCallback(
+    async ({ silent = false }: SaveOptions = {}) => {
+      const valid = await form.trigger();
 
-    if (!valid) {
-      const errors = form.formState.errors;
-      setTab(errors.content ? "content" : "general");
-      toast("Some fields need attention", {
-        tone: "danger",
-        description: firstErrorMessage(errors),
-      });
-      return false;
-    }
+      if (!valid) {
+        if (!silent) {
+          const errors = form.formState.errors;
+          setTab(errors.content ? "content" : "general");
+          toast("Some fields need attention", {
+            tone: "danger",
+            description: firstErrorMessage(errors),
+          });
+        }
+        return false;
+      }
 
-    const values = structuredClone(form.getValues());
-    const saved = useTemplatesStore.getState().update(templateId, values);
+      const values = structuredClone(form.getValues());
+      const saved = useTemplatesStore.getState().update(templateId, values);
 
-    if (!saved) {
-      toast("This template no longer exists", {
-        tone: "danger",
-        description: "It was deleted in another tab. Go back to the template list.",
-      });
-      return false;
-    }
+      if (!saved) {
+        toast("This template no longer exists", {
+          tone: "danger",
+          description: "It was deleted in another tab. Go back to the template list.",
+        });
+        return false;
+      }
 
-    setSavedConfig(values);
-    setSavedAt(saved.updatedAt);
-    return true;
-  }, [form, templateId]);
+      setSavedConfig(values);
+      setSavedAt(saved.updatedAt);
+      return true;
+    },
+    [form, templateId],
+  );
 
   /** Reverting and applying a preset are edits: they land in history like any other. */
   const revert = React.useCallback(() => {
@@ -199,6 +213,8 @@ export function TemplateEditorProvider({
 
   // --- keyboard and leave guard ------------------------------------------------
   React.useEffect(() => {
+    if (!keyboard) return;
+
     const onKeyDown = (event: KeyboardEvent) => {
       if (!event.metaKey && !event.ctrlKey) return;
       const key = event.key.toLowerCase();
@@ -220,7 +236,7 @@ export function TemplateEditorProvider({
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [dirty, undo, redo, save]);
+  }, [keyboard, dirty, undo, redo, save]);
 
   useUnsavedChangesGuard(dirty);
 

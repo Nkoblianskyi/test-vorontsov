@@ -15,7 +15,14 @@ import { PAYMENT_TERMS, type InvoiceEditorApi } from "../model/use-invoice-edito
 const linkButton =
   "inline-flex items-center gap-1 text-micro text-ink-soft underline-offset-2 hover:text-ink hover:underline disabled:no-underline disabled:opacity-40";
 
-export function DetailsSection({ editor }: { editor: InvoiceEditorApi }) {
+export function DetailsSection({
+  editor,
+  onCustomizeTemplate,
+}: {
+  editor: InvoiceEditorApi;
+  /** Default: open the template editor. A screen with its own design panel can switch to it instead. */
+  onCustomizeTemplate?: () => void;
+}) {
   const {
     form,
     values,
@@ -35,6 +42,7 @@ export function DetailsSection({ editor }: { editor: InvoiceEditorApi }) {
     label: term.label,
     value: () => dueInDays(term.days),
   }));
+  const customize = onCustomizeTemplate ?? (() => void leave(templateEditorHref));
 
   return (
     <section className="space-y-4">
@@ -155,11 +163,7 @@ export function DetailsSection({ editor }: { editor: InvoiceEditorApi }) {
           label="Template"
           htmlFor="template"
           action={
-            <button
-              type="button"
-              onClick={() => leave(templateEditorHref)}
-              className={linkButton}
-            >
+            <button type="button" onClick={customize} className={linkButton}>
               <PenLine className="h-3 w-3" />
               Customize
             </button>

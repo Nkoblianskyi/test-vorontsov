@@ -42,7 +42,7 @@ export function ScaledSheet({
       <div
         ref={sheetRef}
         data-print="sheet"
-        className="sheet-shadow"
+        className="sheet-shadow relative"
         style={{
           width: SHEET_WIDTH,
           transform: `scale(${scale})`,

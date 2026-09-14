@@ -6,7 +6,9 @@
    The document sheet stays light in every theme: it gets printed.
 ---------------------------------------------------------------- */
 
-@theme {
+/* `static`: emit every variable even if no utility class uses it. The invoice sheet
+   reads fonts and colours through var() in inline styles, which Tailwind can't see. */
+@theme static {
   --color-canvas: #dcdcd6;
   --color-panel: #ffffff;
   --color-panel-sunken: #f4f4f0;

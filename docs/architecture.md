@@ -11,6 +11,7 @@ src/
     invoices/  model/rows.ts        строки списка, фильтры, суммы по валютам
                ui/                  view, KPI, таблица
     templates/ settings/
+    composer/  lib/ model/ ui/      «Vision»: лист-редактор, инспектор, ⌘K, автосохранение
   widgets/app-shell/                сайдбар и навигация
   features/
     invoice-editor/
@@ -164,7 +165,7 @@ Invoice data  ──┘                    └► SwissDocument   (CSS-пере�
 | ------------------- | ------------------------------------------------------- |
 | `npm run typecheck` | TypeScript strict                                       |
 | `npm run lint`      | eslint: next/core-web-vitals + typescript + react-hooks |
-| `npm run test`      | Vitest, 56 тестов доменной логики                       |
+| `npm run test`      | Vitest, 63 теста доменной логики                        |
 | `npm run build`     | production-сборка Next.js 16                            |
 
 Что покрыто тестами:

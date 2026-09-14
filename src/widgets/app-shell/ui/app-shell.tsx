@@ -3,7 +3,14 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { FileText, LayoutTemplate, Plus, Settings2 } from "lucide-react";
+import {
+  FileText,
+  LayoutTemplate,
+  Plus,
+  Settings2,
+  Sparkles,
+  type LucideIcon,
+} from "lucide-react";
 
 import { useCompanyStore } from "@/entities/company/model/store";
 import { useHydrated } from "@/shared/lib/use-hydrated";
@@ -11,10 +18,13 @@ import { cn } from "@/shared/lib/cn";
 import { Button } from "@/shared/ui/button";
 import { ThemeToggle } from "@/shared/ui/theme-toggle";
 
-const navigation = [
+type NavItem = { href: string; label: string; icon: LucideIcon; badge?: string };
+
+const navigation: NavItem[] = [
   { href: "/invoices", label: "Invoices", icon: FileText },
   { href: "/templates", label: "Templates", icon: LayoutTemplate },
   { href: "/settings", label: "Settings", icon: Settings2 },
+  { href: "/vision", label: "Vision", icon: Sparkles, badge: "new" },
 ];
 
 function Wordmark() {
@@ -60,9 +70,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </Button>
         </div>
 
+        {/* Phones: four equal tabs, icon over label, never wider than the screen. */}
         <nav
           aria-label="Main"
-          className="flex overflow-x-auto border-t border-rule px-1 lg:flex-col lg:border-t-0 lg:px-0"
+          className="grid grid-cols-4 border-t border-rule lg:flex lg:flex-col lg:border-t-0"
         >
           {navigation.map((item) => {
             const active = pathname.startsWith(item.href);
@@ -73,7 +84,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 href={item.href}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "relative flex shrink-0 items-center gap-3 px-3 py-3 text-sm transition-colors lg:px-4 lg:py-2.5",
+                  "relative flex min-w-0 flex-col items-center gap-1 px-1 py-2 text-[0.6875rem] transition-colors",
+                  "lg:flex-row lg:gap-3 lg:px-4 lg:py-2.5 lg:text-sm",
                   active
                     ? "font-medium text-ink"
                     : "text-ink-soft hover:bg-panel-sunken hover:text-ink",
@@ -85,8 +97,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                     aria-hidden
                   />
                 ) : null}
-                <Icon className="h-4 w-4" aria-hidden />
-                {item.label}
+                <Icon className={cn("h-4 w-4", item.badge && "text-signal")} aria-hidden />
+                <span className="truncate">{item.label}</span>
+                {item.badge ? (
+                  <span className="absolute top-1.5 right-[calc(50%-1.1rem)] h-1.5 w-1.5 bg-signal lg:static lg:ml-auto lg:h-auto lg:w-auto lg:border lg:border-signal lg:bg-transparent lg:px-1 lg:text-[0.625rem] lg:font-semibold lg:tracking-wider lg:text-signal lg:uppercase">
+                    <span className="sr-only lg:not-sr-only">{item.badge}</span>
+                  </span>
+                ) : null}
               </Link>
             );
           })}
