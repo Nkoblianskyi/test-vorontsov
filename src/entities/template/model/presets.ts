@@ -1,4 +1,9 @@
-import type { ContentField, ContentFieldKey, TemplateConfig, TemplateRecord } from "./schema";
+import type {
+  ContentField,
+  ContentFieldKey,
+  TemplateConfig,
+  TemplateRecord,
+} from "./schema";
 
 const field = (label: string, show = true): ContentField => ({ show, label });
 
@@ -165,7 +170,10 @@ export const templatePresets: TemplatePreset[] = [
   },
 ];
 
-export function applyPreset(config: TemplateConfig, preset: TemplatePreset): TemplateConfig {
+export function applyPreset(
+  config: TemplateConfig,
+  preset: TemplatePreset,
+): TemplateConfig {
   const { logoShape, logoSize, ...look } = preset.look;
   return { ...config, ...look, logo: { ...config.logo, shape: logoShape, size: logoSize } };
 }
@@ -200,7 +208,8 @@ export function seedTemplates(): TemplateRecord[] {
           itemQuantity: field("Qty"),
           pageFooter: field("", true),
         },
-        terms: "Payment is due within 14 days. Late payments accrue statutory interest from the due date.",
+        terms:
+          "Payment is due within 14 days. Late payments accrue statutory interest from the due date.",
         statement: "Thank you for your business.",
       },
       payments: {

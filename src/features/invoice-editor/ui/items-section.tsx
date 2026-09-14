@@ -4,24 +4,12 @@ import { ArrowDown, ArrowUp, Plus, Trash2 } from "lucide-react";
 import { useFieldArray, type UseFormReturn } from "react-hook-form";
 
 import type { InvoiceInput } from "@/entities/invoice/model/schema";
-import { createId } from "@/shared/lib/id";
 import { cn } from "@/shared/lib/cn";
 import { formatMoney, type Currency } from "@/shared/lib/format";
 import { Button } from "@/shared/ui/button";
 import { SectionHeading } from "@/shared/ui/field";
 import { Input, Textarea } from "@/shared/ui/input";
-
-export const newLineItem = () => ({
-  id: createId("li_"),
-  name: "",
-  description: "",
-  quantity: 1,
-  rate: 0,
-});
-
-/** Stable ids, so a click on the sheet can find the field that prints there. */
-export const itemFieldId = (index: number, part: "name" | "description" | "quantity" | "rate") =>
-  `item-${index}-${part}`;
+import { itemFieldId, newLineItem } from "../lib/line-item";
 
 const iconButton =
   "grid h-7 w-7 place-items-center text-ink-faint transition-colors hover:bg-panel hover:text-ink disabled:pointer-events-none disabled:opacity-30";
@@ -63,12 +51,17 @@ export function ItemsSection({
         {fields.map((field, index) => {
           const lineErrors = errors?.[index];
           const message =
-            lineErrors?.name?.message ?? lineErrors?.quantity?.message ?? lineErrors?.rate?.message;
+            lineErrors?.name?.message ??
+            lineErrors?.quantity?.message ??
+            lineErrors?.rate?.message;
 
           return (
             <li
               key={field.key}
-              className={cn("border bg-panel", lineErrors ? "border-signal" : "border-rule")}
+              className={cn(
+                "border bg-panel",
+                lineErrors ? "border-signal" : "border-rule",
+              )}
             >
               <div className="flex items-center justify-between gap-2 border-b border-rule bg-panel-sunken py-1 pr-1 pl-3">
                 <span className="tnum text-micro font-medium tracking-[0.06em] text-ink-soft uppercase">
@@ -100,7 +93,11 @@ export function ItemsSection({
                     onClick={() => remove(index)}
                     disabled={fields.length === 1}
                     aria-label={`Remove line ${index + 1}`}
-                    title={fields.length === 1 ? "An invoice needs at least one line" : "Remove line"}
+                    title={
+                      fields.length === 1
+                        ? "An invoice needs at least one line"
+                        : "Remove line"
+                    }
                     className={cn(iconButton, "hover:text-signal")}
                   >
                     <Trash2 className="h-3.5 w-3.5" />
@@ -138,7 +135,10 @@ export function ItemsSection({
                       step="any"
                       min="0"
                       aria-invalid={Boolean(lineErrors?.quantity)}
-                      className={cn("tnum text-right", lineErrors?.quantity && "border-signal")}
+                      className={cn(
+                        "tnum text-right",
+                        lineErrors?.quantity && "border-signal",
+                      )}
                       {...form.register(`items.${index}.quantity`, { valueAsNumber: true })}
                     />
                   </label>
@@ -153,7 +153,10 @@ export function ItemsSection({
                         step="any"
                         min="0"
                         aria-invalid={Boolean(lineErrors?.rate)}
-                        className={cn("tnum pr-12 text-right", lineErrors?.rate && "border-signal")}
+                        className={cn(
+                          "tnum pr-12 text-right",
+                          lineErrors?.rate && "border-signal",
+                        )}
                         {...form.register(`items.${index}.rate`, { valueAsNumber: true })}
                       />
                       <span className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-micro text-ink-faint">
@@ -164,10 +167,7 @@ export function ItemsSection({
 
                   <div className="min-w-0 space-y-1 text-right">
                     <span className="field-label block">Amount</span>
-                    <p
-                      className="tnum flex h-10 items-center justify-end truncate text-sm font-semibold"
-                      aria-live="polite"
-                    >
+                    <p className="tnum flex h-10 items-center justify-end truncate text-sm font-semibold">
                       {formatMoney(lines[index] ?? 0, currency)}
                     </p>
                   </div>
@@ -175,7 +175,10 @@ export function ItemsSection({
               </div>
 
               {message ? (
-                <p role="alert" className="border-t border-signal px-3 py-2 text-micro text-signal">
+                <p
+                  role="alert"
+                  className="border-t border-signal px-3 py-2 text-micro text-signal"
+                >
                   {message}
                 </p>
               ) : null}

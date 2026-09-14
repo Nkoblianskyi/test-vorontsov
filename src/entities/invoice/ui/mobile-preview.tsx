@@ -3,6 +3,7 @@
 import * as React from "react";
 import { Eye, X } from "lucide-react";
 import { Button } from "@/shared/ui/button";
+import { useModalDialog } from "@/shared/ui/use-modal-dialog";
 
 /**
  * Phones get the form full-width; the sheet lives one tap away. The bar stays
@@ -41,14 +42,7 @@ export function MobilePreviewSheet({
   title: React.ReactNode;
   children: React.ReactNode;
 }) {
-  const ref = React.useRef<HTMLDialogElement>(null);
-
-  React.useEffect(() => {
-    const dialog = ref.current;
-    if (!dialog) return;
-    if (open && !dialog.open) dialog.showModal();
-    if (!open && dialog.open) dialog.close();
-  }, [open]);
+  const ref = useModalDialog(open);
 
   React.useEffect(() => {
     if (!open) return;

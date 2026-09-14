@@ -3,6 +3,7 @@
 import * as React from "react";
 import { X } from "lucide-react";
 import { cn } from "@/shared/lib/cn";
+import { useModalDialog } from "./use-modal-dialog";
 
 /**
  * Native <dialog>: focus trap, Esc, inert background and top-layer stacking come
@@ -25,15 +26,8 @@ export function Dialog({
   footer?: React.ReactNode;
   className?: string;
 }) {
-  const ref = React.useRef<HTMLDialogElement>(null);
+  const ref = useModalDialog(open);
   const titleId = React.useId();
-
-  React.useEffect(() => {
-    const dialog = ref.current;
-    if (!dialog) return;
-    if (open && !dialog.open) dialog.showModal();
-    if (!open && dialog.open) dialog.close();
-  }, [open]);
 
   return (
     <dialog
@@ -59,7 +53,9 @@ export function Dialog({
                 {title}
               </h2>
               {description ? (
-                <p className="mt-1 text-[0.8125rem] leading-relaxed text-ink-soft">{description}</p>
+                <p className="mt-1 text-[0.8125rem] leading-relaxed text-ink-soft">
+                  {description}
+                </p>
               ) : null}
             </div>
             <button
@@ -71,7 +67,9 @@ export function Dialog({
               <X className="h-4 w-4" />
             </button>
           </header>
-          {children ? <div className="min-h-0 overflow-y-auto px-5 py-4">{children}</div> : null}
+          {children ? (
+            <div className="min-h-0 overflow-y-auto px-5 py-4">{children}</div>
+          ) : null}
           {footer ? (
             <footer className="flex justify-end gap-2 border-t border-rule bg-panel-sunken px-5 py-3">
               {footer}

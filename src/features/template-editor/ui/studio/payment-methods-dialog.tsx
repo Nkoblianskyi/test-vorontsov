@@ -2,9 +2,9 @@
 
 import * as React from "react";
 import { CreditCard, Landmark, Wallet, type LucideIcon } from "lucide-react";
-import { Controller, useWatch, type FieldPath } from "react-hook-form";
+import { Controller, useWatch } from "react-hook-form";
 
-import type { TemplateConfig } from "@/entities/template/model/schema";
+import type { PaymentToggle, TemplateConfig } from "@/entities/template/model/schema";
 import { Dialog } from "@/shared/ui/dialog";
 import { Button } from "@/shared/ui/button";
 import { Switch } from "@/shared/ui/switch";
@@ -21,11 +21,11 @@ function MethodRow({
   icon: LucideIcon;
   title: string;
   description: string;
-  name: FieldPath<TemplateConfig>;
+  name: PaymentToggle;
   children?: React.ReactNode;
 }) {
   const { form } = useTemplateEditor();
-  const enabled = useWatch({ control: form.control, name }) as boolean;
+  const enabled = useWatch({ control: form.control, name });
 
   return (
     <div className="space-y-3 p-4">
@@ -40,7 +40,7 @@ function MethodRow({
           name={name}
           render={({ field }) => (
             <Switch
-              checked={Boolean(field.value)}
+              checked={field.value}
               onCheckedChange={field.onChange}
               aria-label={`Accept ${title}`}
             />
@@ -61,7 +61,13 @@ export function paymentSummary(payments: TemplateConfig["payments"]): string {
   return names.length ? names.join(" · ") : "None enabled";
 }
 
-export function PaymentMethodsDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+export function PaymentMethodsDialog({
+  open,
+  onClose,
+}: {
+  open: boolean;
+  onClose: () => void;
+}) {
   const { form } = useTemplateEditor();
 
   return (
@@ -88,7 +94,12 @@ export function PaymentMethodsDialog({ open, onClose }: { open: boolean; onClose
             name="payments.bankTransfer.details"
             render={({ field, fieldState }) => (
               <div className="space-y-1">
-                <Textarea {...field} rows={2} aria-label="Bank account details" maxLength={300} />
+                <Textarea
+                  {...field}
+                  rows={2}
+                  aria-label="Bank account details"
+                  maxLength={300}
+                />
                 {fieldState.error ? (
                   <p role="alert" className="text-micro text-signal">
                     {fieldState.error.message}
@@ -117,7 +128,12 @@ export function PaymentMethodsDialog({ open, onClose }: { open: boolean; onClose
             name="payments.paypal.email"
             render={({ field, fieldState }) => (
               <div className="space-y-1">
-                <Input {...field} type="email" placeholder="payments@company.com" aria-label="PayPal email" />
+                <Input
+                  {...field}
+                  type="email"
+                  placeholder="payments@company.com"
+                  aria-label="PayPal email"
+                />
                 {fieldState.error ? (
                   <p role="alert" className="text-micro text-signal">
                     {fieldState.error.message}

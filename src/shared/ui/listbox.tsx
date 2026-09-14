@@ -153,13 +153,19 @@ export function Listbox<T extends string>({
         close();
         break;
       case "Tab":
-        close(false);
+        // The menu is portalled to the end of <body>: hand focus back to the field.
+        event.preventDefault();
+        close();
         break;
       default:
         if (event.key.length === 1 && /\S/.test(event.key)) {
           const letter = event.key.toLowerCase();
-          const order = [...options.keys()].map((offset) => (active + 1 + offset) % options.length);
-          const match = order.find((index) => options[index].label.toLowerCase().startsWith(letter));
+          const order = [...options.keys()].map(
+            (offset) => (active + 1 + offset) % options.length,
+          );
+          const match = order.find((index) =>
+            options[index].label.toLowerCase().startsWith(letter),
+          );
           if (match !== undefined) setActive(match);
         }
     }
@@ -182,11 +188,20 @@ export function Listbox<T extends string>({
         className={cn(theme.trigger, !skin && sizes[size], className)}
       >
         {selected?.swatch ? (
-          <span className={theme.swatch} style={{ background: selected.swatch }} aria-hidden />
+          <span
+            className={theme.swatch}
+            style={{ background: selected.swatch }}
+            aria-hidden
+          />
         ) : null}
-        <span className="min-w-0 flex-1 truncate text-left">{selected?.label ?? "Choose…"}</span>
+        <span className="min-w-0 flex-1 truncate text-left">
+          {selected?.label ?? "Choose…"}
+        </span>
         <ChevronDown
-          className={cn("h-4 w-4 shrink-0 opacity-60 transition-transform", open && "rotate-180")}
+          className={cn(
+            "h-4 w-4 shrink-0 opacity-60 transition-transform",
+            open && "rotate-180",
+          )}
           aria-hidden
         />
       </button>
@@ -207,7 +222,9 @@ export function Listbox<T extends string>({
             >
               {options.map((option, index) => {
                 const heading =
-                  option.group && option.group !== options[index - 1]?.group ? option.group : null;
+                  option.group && option.group !== options[index - 1]?.group
+                    ? option.group
+                    : null;
                 const isSelected = option.value === value;
                 return (
                   <React.Fragment key={option.value}>
@@ -230,7 +247,11 @@ export function Listbox<T extends string>({
                       )}
                     >
                       {option.swatch ? (
-                        <span className={theme.swatch} style={{ background: option.swatch }} aria-hidden />
+                        <span
+                          className={theme.swatch}
+                          style={{ background: option.swatch }}
+                          aria-hidden
+                        />
                       ) : null}
                       <span className="min-w-0 truncate">{option.label}</span>
                       {option.description ? (

@@ -22,7 +22,11 @@ import {
   useTemplateEditor,
   type EditorTab,
 } from "../../model/use-template-editor";
-import { usePreviewData, usePreviewOptions, type PreviewSource } from "../../model/use-preview-data";
+import {
+  usePreviewData,
+  usePreviewOptions,
+  type PreviewSource,
+} from "../../model/use-preview-data";
 import { TemplateNotFound } from "../template-not-found";
 import { GeneralSection } from "./general-section";
 import { ContentSection } from "./content-section";
@@ -94,7 +98,8 @@ function StudioTopbar() {
   const leave = useLeaveGuard();
 
   const onSave = async () => {
-    if (await save()) toast("Template saved", { tone: "positive", description: config.name });
+    if (await save())
+      toast("Template saved", { tone: "positive", description: config.name });
   };
 
   return (
@@ -103,10 +108,19 @@ function StudioTopbar() {
       className="flex h-14 shrink-0 items-center justify-between gap-2 border-b border-rule-strong bg-panel px-2 sm:px-3"
     >
       <div className="flex min-w-0 items-center gap-2">
-        <Button variant="ghost" size="icon" onClick={() => leave("/templates")} aria-label="Back to templates">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => leave("/templates")}
+          aria-label="Back to templates"
+        >
           <ArrowLeft className="h-4 w-4" />
         </Button>
-        <span className="h-7 w-1.5 shrink-0" style={{ background: config.primaryColor }} aria-hidden />
+        <span
+          className="h-7 w-1.5 shrink-0"
+          style={{ background: config.primaryColor }}
+          aria-hidden
+        />
         <div className="min-w-0">
           <p className="truncate text-sm font-semibold tracking-tight">
             {config.name?.trim() || "Untitled template"}
@@ -123,7 +137,14 @@ function StudioTopbar() {
 
       <div className="flex shrink-0 items-center gap-1.5">
         <div className="hidden border border-rule sm:flex">
-          <Button variant="ghost" size="icon" onClick={undo} disabled={!canUndo} aria-label="Undo" title="Undo (Ctrl+Z)">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={undo}
+            disabled={!canUndo}
+            aria-label="Undo"
+            title="Undo (Ctrl+Z)"
+          >
             <Undo2 className="h-4 w-4" />
           </Button>
           <Button
@@ -151,7 +172,12 @@ function StudioTopbar() {
 
         <ThemeToggle className="hidden sm:inline-flex" />
 
-        <Button size="sm" variant="ghost" className="hidden md:inline-flex" onClick={() => window.print()}>
+        <Button
+          size="sm"
+          variant="ghost"
+          className="hidden md:inline-flex"
+          onClick={() => window.print()}
+        >
           <Printer className="h-3.5 w-3.5" />
           Print
         </Button>
@@ -163,7 +189,13 @@ function StudioTopbar() {
           </Button>
         ) : null}
 
-        <Button size="sm" variant={dirty ? "signal" : "solid"} onClick={onSave} disabled={!dirty} title="Save (Ctrl+S)">
+        <Button
+          size="sm"
+          variant={dirty ? "signal" : "solid"}
+          onClick={onSave}
+          disabled={!dirty}
+          title="Save (Ctrl+S)"
+        >
           Save
         </Button>
       </div>
@@ -190,8 +222,16 @@ function PreviewSourcePicker({
         onChange={onChange}
         className="w-[17rem] max-w-[46vw]"
         options={[
-          { value: "sample-detailed", label: "Sample · three lines, discount", group: "Samples" },
-          { value: "sample-short", label: "Sample · one line, as in the reference", group: "Samples" },
+          {
+            value: "sample-detailed",
+            label: "Sample · three lines, discount",
+            group: "Samples",
+          },
+          {
+            value: "sample-short",
+            label: "Sample · one line, as in the reference",
+            group: "Samples",
+          },
           ...options.map((option) => ({ ...option, group: "Your invoices" })),
         ]}
       />
@@ -259,10 +299,16 @@ function StudioLayout() {
 
       <MobilePreviewBar onOpen={() => setPreviewOpen(true)}>
         <div className="flex min-w-0 items-center gap-2.5">
-          <span className="h-8 w-1.5 shrink-0" style={{ background: config.primaryColor }} aria-hidden />
+          <span
+            className="h-8 w-1.5 shrink-0"
+            style={{ background: config.primaryColor }}
+            aria-hidden
+          />
           <div className="min-w-0">
             <p className="field-label">Live preview</p>
-            <p className="truncate text-sm font-medium">{config.name?.trim() || "Untitled template"}</p>
+            <p className="truncate text-sm font-medium">
+              {config.name?.trim() || "Untitled template"}
+            </p>
           </div>
         </div>
       </MobilePreviewBar>
@@ -272,8 +318,12 @@ function StudioLayout() {
         onClose={closePreview}
         title={
           <>
-            <p className="truncate text-sm font-semibold">{config.name?.trim() || "Untitled template"}</p>
-            <p className="truncate text-micro text-ink-faint">Tap the sheet to find its setting</p>
+            <p className="truncate text-sm font-semibold">
+              {config.name?.trim() || "Untitled template"}
+            </p>
+            <p className="truncate text-micro text-ink-faint">
+              Tap the sheet to find its setting
+            </p>
           </>
         }
       >

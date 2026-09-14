@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useForm, useWatch, type FieldErrors, type UseFormReturn } from "react-hook-form";
+import { useForm, useWatch, type UseFormReturn } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import {
@@ -18,6 +18,8 @@ import {
 } from "@/entities/template/model/presets";
 import { useTemplatesStore } from "@/entities/template/model/store";
 import { deepEqual } from "@/shared/lib/equal";
+import { firstErrorMessage } from "@/shared/lib/form-errors";
+import { useUnsavedChangesGuard } from "@/shared/lib/use-unsaved-changes";
 import { toast } from "@/shared/ui/toast";
 
 const HISTORY_DEBOUNCE_MS = 400;
@@ -26,6 +28,14 @@ const HISTORY_LIMIT = 60;
 export type EditorTab = "general" | "content";
 
 type History = { stack: TemplateConfig[]; index: number };
+
+function record(history: History, config: TemplateConfig): History {
+  const stack = [
+    ...history.stack.slice(0, history.index + 1),
+    structuredClone(config),
+  ].slice(-HISTORY_LIMIT);
+  return { stack, index: stack.length - 1 };
+}
 
 type EditorContextValue = {
   templateId: string;
@@ -50,22 +60,9 @@ const EditorContext = React.createContext<EditorContextValue | null>(null);
 
 export function useTemplateEditor(): EditorContextValue {
   const context = React.useContext(EditorContext);
-  if (!context) throw new Error("useTemplateEditor must be used inside TemplateEditorProvider");
+  if (!context)
+    throw new Error("useTemplateEditor must be used inside TemplateEditorProvider");
   return context;
-}
-
-/** First readable message in a nested RHF error tree. `ref` holds DOM nodes: never walk it. */
-function firstError(errors: FieldErrors | undefined): string | undefined {
-  if (!errors) return undefined;
-  for (const [key, value] of Object.entries(errors)) {
-    if (!value || key === "ref") continue;
-    if (typeof (value as { message?: unknown }).message === "string") {
-      return (value as { message: string }).message;
-    }
-    const nested = firstError(value as FieldErrors);
-    if (nested) return nested;
-  }
-  return undefined;
 }
 
 function isTextTarget(target: EventTarget | null): boolean {
@@ -73,7 +70,9 @@ function isTextTarget(target: EventTarget | null): boolean {
   if (target instanceof HTMLTextAreaElement || target.isContentEditable) return true;
   return (
     target instanceof HTMLInputElement &&
-    !["checkbox", "radio", "range", "color", "button", "submit", "file"].includes(target.type)
+    !["checkbox", "radio", "range", "color", "button", "submit", "file"].includes(
+      target.type,
+    )
   );
 }
 
@@ -97,6 +96,8 @@ export function TemplateEditorProvider({
     mode: "onChange",
   });
 
+  // useWatch is typed deep-partial; the defaults are complete and fields never
+  // unregister, so every key is present.
   const config = useWatch({ control: form.control }) as TemplateConfig;
 
   const [savedConfig, setSavedConfig] = React.useState(initialConfig);
@@ -104,10 +105,16 @@ export function TemplateEditorProvider({
   const [tab, setTab] = React.useState<EditorTab>("general");
 
   // --- history ---------------------------------------------------------------
-  const [history, setHistory] = React.useState<History>({ stack: [initialConfig], index: 0 });
+  const [history, setHistory] = React.useState<History>({
+    stack: [initialConfig],
+    index: 0,
+  });
 
   /** Set while undo/redo writes into the form, so the replay is not recorded again. */
   const replaying = React.useRef(false);
+
+  /** An edit still inside the debounce window: already real to the user, not yet in the stack. */
+  const pending = !deepEqual(history.stack[history.index], config);
 
   React.useEffect(() => {
     if (replaying.current) {
@@ -117,34 +124,34 @@ export function TemplateEditorProvider({
 
     // Debounced: dragging a slider produces one undo step, not forty.
     const timer = setTimeout(() => {
-      setHistory((current) => {
-        if (deepEqual(current.stack[current.index], config)) return current;
-        const stack = [...current.stack.slice(0, current.index + 1), structuredClone(config)].slice(
-          -HISTORY_LIMIT,
-        );
-        return { stack, index: stack.length - 1 };
-      });
+      setHistory((current) =>
+        deepEqual(current.stack[current.index], config) ? current : record(current, config),
+      );
     }, HISTORY_DEBOUNCE_MS);
 
     return () => clearTimeout(timer);
   }, [config]);
 
-  const replay = React.useCallback(
-    (index: number) => {
+  const goTo = React.useCallback(
+    (next: History) => {
       replaying.current = true;
-      form.reset(history.stack[index], { keepDefaultValues: true });
-      setHistory({ ...history, index });
+      form.reset(next.stack[next.index], { keepDefaultValues: true });
+      setHistory(next);
     },
-    [form, history],
+    [form],
   );
 
   const undo = React.useCallback(() => {
-    if (history.index > 0) replay(history.index - 1);
-  }, [history.index, replay]);
+    // Record a pending edit first, so undo steps back one edit — not two.
+    const settled = pending ? record(history, form.getValues()) : history;
+    if (settled.index > 0) goTo({ ...settled, index: settled.index - 1 });
+  }, [pending, history, form, goTo]);
 
   const redo = React.useCallback(() => {
-    if (history.index < history.stack.length - 1) replay(history.index + 1);
-  }, [history.index, history.stack.length, replay]);
+    if (!pending && history.index < history.stack.length - 1) {
+      goTo({ ...history, index: history.index + 1 });
+    }
+  }, [pending, history, goTo]);
 
   // --- actions ---------------------------------------------------------------
   const save = React.useCallback(async () => {
@@ -153,14 +160,17 @@ export function TemplateEditorProvider({
     if (!valid) {
       const errors = form.formState.errors;
       setTab(errors.content ? "content" : "general");
-      toast("Some fields need attention", { tone: "danger", description: firstError(errors) });
+      toast("Some fields need attention", {
+        tone: "danger",
+        description: firstErrorMessage(errors),
+      });
       return false;
     }
 
     const values = structuredClone(form.getValues());
-    const record = useTemplatesStore.getState().update(templateId, values);
+    const saved = useTemplatesStore.getState().update(templateId, values);
 
-    if (!record) {
+    if (!saved) {
       toast("This template no longer exists", {
         tone: "danger",
         description: "It was deleted in another tab. Go back to the template list.",
@@ -169,7 +179,7 @@ export function TemplateEditorProvider({
     }
 
     setSavedConfig(values);
-    setSavedAt(record.updatedAt);
+    setSavedAt(saved.updatedAt);
     return true;
   }, [form, templateId]);
 
@@ -195,7 +205,8 @@ export function TemplateEditorProvider({
 
       if (key === "s") {
         event.preventDefault();
-        void save().then((ok) => ok && toast("Template saved", { tone: "positive" }));
+        if (dirty)
+          void save().then((ok) => ok && toast("Template saved", { tone: "positive" }));
         return;
       }
 
@@ -209,16 +220,9 @@ export function TemplateEditorProvider({
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [undo, redo, save]);
+  }, [dirty, undo, redo, save]);
 
-  React.useEffect(() => {
-    if (!dirty) return;
-    const onBeforeUnload = (event: BeforeUnloadEvent) => {
-      event.preventDefault();
-    };
-    window.addEventListener("beforeunload", onBeforeUnload);
-    return () => window.removeEventListener("beforeunload", onBeforeUnload);
-  }, [dirty]);
+  useUnsavedChangesGuard(dirty);
 
   const activePresetId = React.useMemo(
     () => templatePresets.find((preset) => matchesPreset(config, preset))?.id ?? null,
@@ -233,8 +237,8 @@ export function TemplateEditorProvider({
     savedAt,
     tab,
     setTab,
-    canUndo: history.index > 0,
-    canRedo: history.index < history.stack.length - 1,
+    canUndo: pending || history.index > 0,
+    canRedo: !pending && history.index < history.stack.length - 1,
     undo,
     redo,
     revert,

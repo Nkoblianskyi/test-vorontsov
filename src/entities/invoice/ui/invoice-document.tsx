@@ -1,4 +1,4 @@
-import type { TemplateConfig } from "@/entities/template/model/schema";
+import type { TemplateConfig } from "@/entities/template/@x/invoice";
 import type { InvoiceDocumentData } from "../model/document";
 import { ClassicDocument } from "./classic-document";
 import { SwissDocument } from "./swiss-document";

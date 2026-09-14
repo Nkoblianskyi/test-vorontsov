@@ -17,7 +17,16 @@ export type InvoiceTotals = {
   balance: number;
 };
 
-const round2 = (value: number) => Math.round((value + Number.EPSILON) * 100) / 100;
+/**
+ * Half-up to cents. `x * 100` in binary floats lands just below .5 for values like
+ * 10.075 (1007.4999…), so the product is first trimmed to 6 decimals, then rounded.
+ * Rounds away from zero, so -0.005 → -0.01 mirrors 0.005 → 0.01.
+ */
+export function round2(value: number): number {
+  const cents = Math.round(Number((Math.abs(value) * 100).toFixed(6)));
+  return (Math.sign(value) * cents) / 100 || 0;
+}
+
 const num = (value: number | undefined) => (Number.isFinite(value) ? (value as number) : 0);
 const sum = (values: number[]) => values.reduce((total, value) => total + value, 0);
 
@@ -27,7 +36,9 @@ const sum = (values: number[]) => values.reduce((total, value) => total + value,
  * Inputs may be half-typed form values: empty numbers count as zero.
  */
 export function computeTotals(input: Partial<TotalsInput>): InvoiceTotals {
-  const lines = (input.items ?? []).map((item) => round2(num(item?.quantity) * num(item?.rate)));
+  const lines = (input.items ?? []).map((item) =>
+    round2(num(item?.quantity) * num(item?.rate)),
+  );
   const subtotal = round2(sum(lines));
 
   const discountValue = Math.max(0, num(input.discount?.value));
@@ -47,5 +58,14 @@ export function computeTotals(input: Partial<TotalsInput>): InvoiceTotals {
   const total = round2(net + sum(taxes.map((tax) => tax.amount)));
   const paid = round2(Math.max(0, num(input.amountPaid)));
 
-  return { lines, subtotal, discount, net, taxes, total, paid, balance: round2(total - paid) };
+  return {
+    lines,
+    subtotal,
+    discount,
+    net,
+    taxes,
+    total,
+    paid,
+    balance: round2(total - paid),
+  };
 }

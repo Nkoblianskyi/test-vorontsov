@@ -65,8 +65,14 @@ const dateOptions: Record<
   { locale: string; options: Intl.DateTimeFormatOptions }
 > = {
   long: { locale: "en-US", options: { month: "long", day: "numeric", year: "numeric" } },
-  european: { locale: "en-GB", options: { day: "numeric", month: "long", year: "numeric" } },
-  numeric: { locale: "en-GB", options: { day: "2-digit", month: "2-digit", year: "numeric" } },
+  european: {
+    locale: "en-GB",
+    options: { day: "numeric", month: "long", year: "numeric" },
+  },
+  numeric: {
+    locale: "en-GB",
+    options: { day: "2-digit", month: "2-digit", year: "numeric" },
+  },
 };
 
 export function formatDate(iso: string, format: DateFormat): string {

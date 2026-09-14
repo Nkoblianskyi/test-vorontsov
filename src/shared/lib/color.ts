@@ -62,9 +62,6 @@ export function mix(hex: string, target: string, amount: number): string {
   );
 }
 
-export const tint = (hex: string, amount: number) => mix(hex, "#ffffff", amount);
-export const shade = (hex: string, amount: number) => mix(hex, "#000000", amount);
-
 export type ContrastVerdict = {
   ratio: number;
   level: "aa-large" | "aa" | "aaa" | "fail";

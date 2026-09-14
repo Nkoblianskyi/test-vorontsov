@@ -1,4 +1,4 @@
-import type { TemplateConfig } from "@/entities/template/model/schema";
+import type { TemplateConfig } from "@/entities/template/@x/invoice";
 
 export type PaymentLine = { method: string; detail: string };
 
@@ -8,7 +8,11 @@ export function paymentLines(
   invoiceNumber: string,
 ): PaymentLine[] {
   const lines: PaymentLine[] = [];
-  const slug = invoiceNumber.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-") || "invoice";
+  const slug =
+    invoiceNumber
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-") || "invoice";
 
   if (payments.bankTransfer.enabled) {
     lines.push({ method: "Bank transfer", detail: payments.bankTransfer.details.trim() });

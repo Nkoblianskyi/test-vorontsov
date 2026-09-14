@@ -50,7 +50,10 @@ export function useFloating(
       const below = window.innerHeight - rect.bottom - gap - EDGE;
       const above = rect.top - gap - EDGE;
       const flip = below < (flipBelow ?? Math.min(preferredHeight, 220)) && above > below;
-      const left = Math.max(EDGE, Math.min(rect.left, window.innerWidth - menuWidth - EDGE));
+      const left = Math.max(
+        EDGE,
+        Math.min(rect.left, window.innerWidth - menuWidth - EDGE),
+      );
 
       setPosition({
         top: flip ? rect.top - gap : rect.bottom + gap,
@@ -74,7 +77,10 @@ export function useFloating(
   return open ? position : null;
 }
 
-export function floatingStyle(position: FloatingPosition, fixedWidth?: boolean): React.CSSProperties {
+export function floatingStyle(
+  position: FloatingPosition,
+  fixedWidth?: boolean,
+): React.CSSProperties {
   return {
     position: "fixed",
     top: position.top,
@@ -92,20 +98,20 @@ export function useDismiss(
   refs: React.RefObject<HTMLElement | null>[],
   onDismiss: () => void,
 ) {
-  const latest = React.useRef(onDismiss);
+  // Latest refs and callback, read at event time: the listener subscribes once per open.
+  const latest = React.useRef({ refs, onDismiss });
   React.useEffect(() => {
-    latest.current = onDismiss;
+    latest.current = { refs, onDismiss };
   });
 
   React.useEffect(() => {
     if (!open) return;
     const onPointerDown = (event: PointerEvent) => {
       const target = event.target as Node;
-      if (refs.some((ref) => ref.current?.contains(target))) return;
-      latest.current();
+      if (latest.current.refs.some((ref) => ref.current?.contains(target))) return;
+      latest.current.onDismiss();
     };
     document.addEventListener("pointerdown", onPointerDown, true);
     return () => document.removeEventListener("pointerdown", onPointerDown, true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 }

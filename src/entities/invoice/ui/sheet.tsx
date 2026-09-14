@@ -43,7 +43,11 @@ export function ScaledSheet({
         ref={sheetRef}
         data-print="sheet"
         className="sheet-shadow"
-        style={{ width: SHEET_WIDTH, transform: `scale(${scale})`, transformOrigin: "top left" }}
+        style={{
+          width: SHEET_WIDTH,
+          transform: `scale(${scale})`,
+          transformOrigin: "top left",
+        }}
       >
         {children}
       </div>
@@ -82,7 +86,11 @@ export function SheetThumbnail({
         <div
           inert
           className="pointer-events-none select-none"
-          style={{ width: SHEET_WIDTH, transform: `scale(${scale})`, transformOrigin: "top left" }}
+          style={{
+            width: SHEET_WIDTH,
+            transform: `scale(${scale})`,
+            transformOrigin: "top left",
+          }}
         >
           {children}
         </div>

@@ -81,7 +81,9 @@ export function SectionHeading({
     <div className="border-b border-rule-strong pb-2">
       <div className="flex items-baseline justify-between gap-3">
         <h2 className="flex items-baseline gap-2 text-sm font-semibold tracking-tight text-ink">
-          {index ? <span className="tnum text-micro font-medium text-ink-faint">{index}</span> : null}
+          {index ? (
+            <span className="tnum text-micro font-medium text-ink-faint">{index}</span>
+          ) : null}
           {title}
         </h2>
         {action}

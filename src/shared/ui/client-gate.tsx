@@ -17,7 +17,10 @@ export function ClientGate({
 
 export function PageSkeleton() {
   return (
-    <div className="mx-auto max-w-[1240px] space-y-6 px-4 py-6 sm:px-8 sm:py-8" aria-busy="true">
+    <div
+      className="mx-auto max-w-[1240px] space-y-6 px-4 py-6 sm:px-8 sm:py-8"
+      aria-busy="true"
+    >
       <div className="h-16 border-b border-rule-strong" />
       <div className="grid h-28 grid-cols-2 gap-px border border-rule bg-rule lg:grid-cols-4">
         {[0, 1, 2, 3].map((cell) => (
@@ -29,9 +32,13 @@ export function PageSkeleton() {
   );
 }
 
-export function ScreenSkeleton() {
+function ScreenSkeleton() {
   return (
-    <div className="flex h-dvh items-center justify-center" aria-busy="true" aria-live="polite">
+    <div
+      className="flex h-dvh items-center justify-center"
+      aria-busy="true"
+      aria-live="polite"
+    >
       <div className="flex items-center gap-3 text-micro text-ink-faint">
         <span className="skeleton-bar h-px w-16 bg-ink" aria-hidden />
         Loading workspace

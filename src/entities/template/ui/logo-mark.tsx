@@ -24,7 +24,13 @@ export function LogoMark({
       <img
         src={logo.src}
         alt=""
-        style={{ width: box, height: box, objectFit: "contain", borderRadius: radius, flexShrink: 0 }}
+        style={{
+          width: box,
+          height: box,
+          objectFit: "contain",
+          borderRadius: radius,
+          flexShrink: 0,
+        }}
       />
     );
   }

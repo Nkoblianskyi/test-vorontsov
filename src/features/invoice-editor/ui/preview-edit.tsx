@@ -3,107 +3,15 @@
 import * as React from "react";
 import { createPortal } from "react-dom";
 import { ArrowUpRight, X } from "lucide-react";
-import { useWatch, type Path, type UseFormReturn } from "react-hook-form";
+import { useWatch, type PathValue, type UseFormReturn } from "react-hook-form";
 
 import type { InvoiceInput } from "@/entities/invoice/model/schema";
 import { Button } from "@/shared/ui/button";
-import { Input, Textarea } from "@/shared/ui/input";
 import { floatingStyle, useDismiss, useFloating } from "@/shared/ui/floating";
-import { itemFieldId } from "./items-section";
+import { Input, Textarea } from "@/shared/ui/input";
+import type { FieldEdit } from "../lib/edit-targets";
 
-type FieldSpec = {
-  kind: "field";
-  label: string;
-  path: Path<InvoiceInput>;
-  input: "text" | "textarea" | "number";
-  fieldId: string;
-  suffix?: string;
-};
-
-/** What a click on the sheet means in the invoice editor. */
-export type EditSpec =
-  | FieldSpec
-  /** Dates open the calendar next to the form field. */
-  | { kind: "jump"; fieldId: string; openPicker?: boolean }
-  /** Printed by the template: title, logo, labels, payment block. */
-  | { kind: "template"; label: string }
-  /** Printed from Settings: the seller block. */
-  | { kind: "company" };
-
-const field = (
-  label: string,
-  path: Path<InvoiceInput>,
-  fieldId: string,
-  input: FieldSpec["input"] = "text",
-  suffix?: string,
-): FieldSpec => ({ kind: "field", label, path, fieldId, input, suffix });
-
-export function resolveEdit(key: string, currency: string): EditSpec | null {
-  const item = /^item\.(\d+)\.(name|description|quantity|rate)$/.exec(key);
-  if (item) {
-    const index = Number(item[1]);
-    const part = item[2] as "name" | "description" | "quantity" | "rate";
-    const labels = { name: "Item", description: "Description", quantity: "Quantity", rate: "Rate" };
-    return field(
-      `Line ${index + 1} · ${labels[part]}`,
-      `items.${index}.${part}`,
-      itemFieldId(index, part),
-      part === "description" ? "textarea" : part === "name" ? "text" : "number",
-      part === "rate" ? currency : undefined,
-    );
-  }
-
-  const tax = /^tax\.(\d+)$/.exec(key);
-  if (tax) {
-    const index = Number(tax[1]);
-    return field(`Tax ${index + 1} rate`, `taxes.${index}.rate`, `tax-${index}-rate`, "number", "%");
-  }
-
-  switch (key) {
-    case "meta.number":
-      return field("Invoice number", "number", "invoice-number");
-    case "meta.reference":
-      return field("Reference / PO", "reference", "invoice-reference");
-    case "meta.issueDate":
-      return { kind: "jump", fieldId: "issue-date", openPicker: true };
-    case "meta.dueDate":
-      return { kind: "jump", fieldId: "due-date", openPicker: true };
-    case "buyer.name":
-      return field("Customer name", "customer.name", "customer-name");
-    case "buyer.address":
-      return field("Billing address", "customer.address", "customer-address", "textarea");
-    case "buyer.taxId":
-      return field("Customer tax ID", "customer.taxId", "customer-tax");
-    case "discount":
-      return field("Discount", "discount.value", "discount-value", "number");
-    case "paid":
-    case "balance":
-      return field("Already paid", "amountPaid", "amount-paid", "number", currency);
-    case "subtotal":
-    case "total":
-      return { kind: "jump", fieldId: "summary" };
-    case "terms":
-      return field("Terms & conditions", "terms", "terms", "textarea");
-    case "statement":
-      return field("Statement", "statement", "statement", "textarea");
-    case "seller":
-      return { kind: "company" };
-    case "title":
-      return { kind: "template", label: "Title" };
-    case "logo":
-      return { kind: "template", label: "Logo" };
-    case "labels":
-      return { kind: "template", label: "Column labels" };
-    case "payment":
-      return { kind: "template", label: "Payment details" };
-    case "footer":
-      return { kind: "template", label: "Page footer" };
-    default:
-      return null;
-  }
-}
-
-export type InlineTarget = { spec: FieldSpec; anchor: HTMLElement };
+export type InlineTarget = { spec: FieldEdit; anchor: HTMLElement };
 
 /**
  * A small editor that opens on top of the sheet, right where the text prints.
@@ -148,7 +56,12 @@ export function PreviewEditPopover({
       style={floatingStyle(position, true)}
       className="border border-ink bg-panel p-3 text-ink shadow-[0_18px_40px_-18px_rgba(0,0,0,.55)]"
     >
-      <InlineField key={target.spec.path} spec={target.spec} form={form} onClose={onClose} />
+      <InlineField
+        key={target.spec.path}
+        spec={target.spec}
+        form={form}
+        onClose={onClose}
+      />
       <div className="mt-3 flex items-center justify-between gap-2">
         <button
           type="button"
@@ -167,26 +80,34 @@ export function PreviewEditPopover({
   );
 }
 
+/**
+ * Controlled, not registered: registering the same path twice would steal the
+ * form input's ref from react-hook-form. A local draft keeps "1." typeable.
+ */
 function InlineField({
   spec,
   form,
   onClose,
 }: {
-  spec: FieldSpec;
+  spec: FieldEdit;
   form: UseFormReturn<InvoiceInput>;
   onClose: () => void;
 }) {
-  const value = useWatch({ control: form.control, name: spec.path }) as unknown;
+  const value: unknown = useWatch({ control: form.control, name: spec.path });
   const error = form.getFieldState(spec.path, form.formState).error?.message;
-  const number = spec.input === "number";
+  const numeric = spec.input === "number";
   const [draft, setDraft] = React.useState(() =>
-    number ? (Number.isFinite(value) ? String(value) : "") : String(value ?? ""),
+    numeric ? (Number.isFinite(value) ? String(value) : "") : String(value ?? ""),
   );
 
   const write = (next: string) => {
     setDraft(next);
-    const parsed = number ? (next.trim() === "" ? Number.NaN : Number(next)) : next;
-    form.setValue(spec.path, parsed as never, { shouldDirty: true, shouldValidate: true });
+    const parsed = numeric ? (next.trim() === "" ? Number.NaN : Number(next)) : next;
+    // The spec pairs each path with its input kind, so the value matches the field type.
+    form.setValue(spec.path, parsed as PathValue<InvoiceInput, typeof spec.path>, {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
   };
 
   const onKeyDown = (event: React.KeyboardEvent) => {
@@ -206,7 +127,7 @@ function InlineField({
   return (
     <div className="space-y-1.5">
       <div className="flex items-center justify-between gap-2">
-        <label htmlFor={id} className="field-label uppercase tracking-[0.06em]">
+        <label htmlFor={id} className="field-label tracking-[0.06em] uppercase">
           {spec.label}
         </label>
         <button
@@ -233,15 +154,15 @@ function InlineField({
           <Input
             id={id}
             autoFocus
-            type={number ? "number" : "text"}
-            inputMode={number ? "decimal" : undefined}
-            step={number ? "any" : undefined}
+            type={numeric ? "number" : "text"}
+            inputMode={numeric ? "decimal" : undefined}
+            step={numeric ? "any" : undefined}
             value={draft}
             onChange={(event) => write(event.target.value)}
             onKeyDown={onKeyDown}
             onFocus={(event) => event.target.select()}
             aria-invalid={Boolean(error)}
-            className={spec.suffix ? "tnum pr-12" : number ? "tnum" : undefined}
+            className={spec.suffix ? "tnum pr-12" : numeric ? "tnum" : undefined}
           />
           {spec.suffix ? (
             <span className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-micro text-ink-faint">
@@ -256,7 +177,9 @@ function InlineField({
         </p>
       ) : (
         <p className="text-micro text-ink-faint">
-          {spec.input === "textarea" ? "Changes apply as you type." : "Enter to finish, Esc to close."}
+          {spec.input === "textarea"
+            ? "Changes apply as you type."
+            : "Enter to finish, Esc to close."}
         </p>
       )}
     </div>

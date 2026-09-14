@@ -6,44 +6,38 @@ import { Controller, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 
-import { defaultCompany, defaultInvoicing, useCompanyStore } from "@/entities/company/model/store";
-import { seedInvoices } from "@/entities/invoice/model/samples";
+import {
+  companyProfileSchema,
+  invoicingDefaultsSchema,
+} from "@/entities/company/model/schema";
+import {
+  defaultCompany,
+  defaultInvoicing,
+  useCompanyStore,
+} from "@/entities/company/model/store";
 import { nextInvoiceNumber, useInvoicesStore } from "@/entities/invoice/model/store";
-import { seedTemplates } from "@/entities/template/model/presets";
-import { useTemplatesStore } from "@/entities/template/model/store";
-import { todayIso } from "@/shared/lib/dates";
-import { clearDemoData } from "@/shared/lib/storage";
+import { resetDemoData } from "@/features/workspace-data/model/actions";
 import { currencyNames, currencyValues } from "@/shared/lib/format";
 import { Button } from "@/shared/ui/button";
 import { requestConfirm } from "@/shared/ui/confirm";
 import { Field } from "@/shared/ui/field";
 import { Input, Textarea } from "@/shared/ui/input";
+import { Listbox } from "@/shared/ui/listbox";
 import { PageHeader } from "@/shared/ui/page-header";
 import { Segmented } from "@/shared/ui/segmented";
-import { Listbox } from "@/shared/ui/listbox";
 import { toast } from "@/shared/ui/toast";
 
 const settingsSchema = z.object({
-  profile: z.object({
-    name: z.string().trim().min(1, "Company name is required").max(80),
-    address: z.string().max(300),
-    email: z.union([z.literal(""), z.string().trim().email("That email looks incomplete")]),
-    phone: z.string().max(40),
-    taxId: z.string().max(40),
-  }),
-  invoicing: z.object({
-    prefix: z
-      .string()
-      .trim()
-      .min(1, "Add a prefix")
-      .max(10, "10 characters at most")
-      .regex(/^[A-Za-z0-9\-_/]+$/, "Letters, numbers, - _ and / only"),
-    paymentTermsDays: z.number().int().min(0).max(120),
-    currency: z.enum(currencyValues),
-  }),
+  profile: companyProfileSchema,
+  invoicing: invoicingDefaultsSchema,
 });
 
 type SettingsValues = z.infer<typeof settingsSchema>;
+
+const TERM_OPTIONS = [0, 7, 14, 30, 45].map((days) => ({
+  value: String(days),
+  label: days === 0 ? "On receipt" : `${days} days`,
+}));
 
 function Block({
   title,
@@ -98,14 +92,7 @@ export function SettingsView() {
       tone: "danger",
     });
     if (!confirmed) return;
-    clearDemoData();
-    useCompanyStore.setState({ profile: defaultCompany, invoicing: defaultInvoicing });
-    useInvoicesStore.setState({ invoices: seedInvoices(todayIso()) });
-    useTemplatesStore.setState({
-      templates: seedTemplates(),
-      defaultId: "standard",
-      editorPreference: "studio",
-    });
+    resetDemoData();
     form.reset({ profile: defaultCompany, invoicing: defaultInvoicing });
     toast("Demo data restored", { description: "Sample invoices and templates are back." });
     router.push("/invoices");
@@ -124,7 +111,11 @@ export function SettingsView() {
                 Discard
               </Button>
             ) : null}
-            <Button variant={isDirty ? "signal" : "solid"} onClick={() => void submit()} disabled={!isDirty}>
+            <Button
+              variant={isDirty ? "signal" : "solid"}
+              onClick={() => void submit()}
+              disabled={!isDirty}
+            >
               Save changes
             </Button>
           </>
@@ -143,8 +134,17 @@ export function SettingsView() {
           title="Company"
           description="Printed in the seller block of every invoice, in every template."
         >
-          <Field label="Company name" htmlFor="company-name" required error={errors.profile?.name?.message}>
-            <Input id="company-name" autoComplete="organization" {...form.register("profile.name")} />
+          <Field
+            label="Company name"
+            htmlFor="company-name"
+            required
+            error={errors.profile?.name?.message}
+          >
+            <Input
+              id="company-name"
+              autoComplete="organization"
+              {...form.register("profile.name")}
+            />
           </Field>
           <Field
             label="Address"
@@ -155,14 +155,36 @@ export function SettingsView() {
             <Textarea id="company-address" rows={3} {...form.register("profile.address")} />
           </Field>
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Phone" htmlFor="company-phone" error={errors.profile?.phone?.message}>
-              <Input id="company-phone" type="tel" autoComplete="tel" {...form.register("profile.phone")} />
+            <Field
+              label="Phone"
+              htmlFor="company-phone"
+              error={errors.profile?.phone?.message}
+            >
+              <Input
+                id="company-phone"
+                type="tel"
+                autoComplete="tel"
+                {...form.register("profile.phone")}
+              />
             </Field>
-            <Field label="Billing email" htmlFor="company-email" error={errors.profile?.email?.message}>
-              <Input id="company-email" type="email" autoComplete="email" {...form.register("profile.email")} />
+            <Field
+              label="Billing email"
+              htmlFor="company-email"
+              error={errors.profile?.email?.message}
+            >
+              <Input
+                id="company-email"
+                type="email"
+                autoComplete="email"
+                {...form.register("profile.email")}
+              />
             </Field>
           </div>
-          <Field label="Tax ID" htmlFor="company-tax" error={errors.profile?.taxId?.message}>
+          <Field
+            label="Tax ID"
+            htmlFor="company-tax"
+            error={errors.profile?.taxId?.message}
+          >
             <Input id="company-tax" {...form.register("profile.taxId")} />
           </Field>
         </Block>
@@ -179,12 +201,19 @@ export function SettingsView() {
               hint={
                 prefix && !errors.invoicing?.prefix ? (
                   <>
-                    Next number: <span className="tnum text-ink">{nextInvoiceNumber(invoices, prefix)}</span>
+                    Next number:{" "}
+                    <span className="tnum text-ink">
+                      {nextInvoiceNumber(invoices, prefix)}
+                    </span>
                   </>
                 ) : undefined
               }
             >
-              <Input id="invoice-prefix" className="tnum" {...form.register("invoicing.prefix")} />
+              <Input
+                id="invoice-prefix"
+                className="tnum"
+                {...form.register("invoicing.prefix")}
+              />
             </Field>
             <Controller
               control={form.control}
@@ -213,13 +242,7 @@ export function SettingsView() {
                   name="Payment terms"
                   value={String(field.value)}
                   onChange={(value) => field.onChange(Number(value))}
-                  options={[
-                    { value: "0", label: "On receipt" },
-                    { value: "7", label: "7 days" },
-                    { value: "14", label: "14 days" },
-                    { value: "30", label: "30 days" },
-                    { value: "45", label: "45 days" },
-                  ]}
+                  options={TERM_OPTIONS}
                 />
               </Field>
             )}

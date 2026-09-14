@@ -12,7 +12,10 @@ export async function readLogoFile(file: File): Promise<LogoReadResult> {
     return { ok: false, message: "That file is not an image. Use PNG, JPG, SVG or WebP." };
   }
   if (file.size > MAX_LOGO_BYTES) {
-    return { ok: false, message: "Keep the logo under 512 KB so invoices stay light to email." };
+    return {
+      ok: false,
+      message: "Keep the logo under 512 KB so invoices stay light to email.",
+    };
   }
 
   try {

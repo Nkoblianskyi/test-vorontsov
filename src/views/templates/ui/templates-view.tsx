@@ -13,6 +13,7 @@ import { SheetThumbnail } from "@/entities/invoice/ui/sheet";
 import { defaultTemplateConfig } from "@/entities/template/model/presets";
 import type { TemplateRecord } from "@/entities/template/model/schema";
 import { editorHref, useTemplatesStore } from "@/entities/template/model/store";
+import { deleteTemplate } from "@/features/workspace-data/model/actions";
 import { formatTimestamp } from "@/shared/lib/format";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
@@ -38,7 +39,8 @@ export function TemplatesView() {
     return counts;
   }, [invoices]);
 
-  const open = (template: TemplateRecord) => router.push(editorHref(template.id, preference));
+  const open = (template: TemplateRecord) =>
+    router.push(editorHref(template.id, preference));
 
   const create = () => {
     const record = useTemplatesStore
@@ -49,12 +51,15 @@ export function TemplatesView() {
 
   const duplicate = (template: TemplateRecord) => {
     const copy = useTemplatesStore.getState().duplicate(template.id);
-    if (copy) toast(`Created “${copy.name}”`, { description: "Open it to make it your own." });
+    if (copy)
+      toast(`Created “${copy.name}”`, { description: "Open it to make it your own." });
   };
 
   const setDefault = (template: TemplateRecord) => {
     useTemplatesStore.getState().setDefault(template.id);
-    toast(`“${template.name}” is now the default`, { description: "New invoices start with it." });
+    toast(`“${template.name}” is now the default`, {
+      description: "New invoices start with it.",
+    });
   };
 
   const remove = async (template: TemplateRecord) => {
@@ -67,9 +72,7 @@ export function TemplatesView() {
       confirmLabel: "Delete template",
       tone: "danger",
     });
-    if (!confirmed) return;
-    useInvoicesStore.getState().reassignTemplate(template.id, defaultId);
-    useTemplatesStore.getState().remove(template.id);
+    if (!confirmed || !deleteTemplate(template.id)) return;
     toast(`“${template.name}” deleted`);
   };
 
@@ -91,10 +94,11 @@ export function TemplatesView() {
         <div className="min-w-0 max-w-2xl">
           <p className="text-sm font-medium">Open templates in</p>
           <p className="text-micro leading-relaxed text-ink-soft">
-            Both editors change the same template. <strong className="font-medium text-ink">Reference 1:1</strong>{" "}
-            reproduces the original customize screen exactly.{" "}
-            <strong className="font-medium text-ink">Studio</strong> is our redesign of the same flow, with
-            presets, undo and a print-ready A4 preview.
+            Both editors change the same template.{" "}
+            <strong className="font-medium text-ink">Reference 1:1</strong> reproduces the
+            original customize screen exactly.{" "}
+            <strong className="font-medium text-ink">Studio</strong> is our redesign of the
+            same flow, with presets, undo and a print-ready A4 preview.
           </p>
         </div>
         <Segmented
@@ -127,7 +131,11 @@ export function TemplatesView() {
                   <SheetThumbnail className="sheet-shadow transition-transform duration-200 group-hover:-translate-y-1">
                     <InvoiceDocument
                       config={template}
-                      data={{ ...sample, terms: template.content.terms, statement: template.content.statement }}
+                      data={{
+                        ...sample,
+                        terms: template.content.terms,
+                        statement: template.content.statement,
+                      }}
                     />
                   </SheetThumbnail>
                 </div>
@@ -146,8 +154,10 @@ export function TemplatesView() {
                     </p>
                     <p className="mt-0.5 text-micro text-ink-faint">
                       {template.design === "classic" ? "Classic layout" : "Swiss grid"} ·{" "}
-                      {count ? `${count} ${count === 1 ? "invoice" : "invoices"}` : "not used yet"} · edited{" "}
-                      {formatTimestamp(template.updatedAt)}
+                      {count
+                        ? `${count} ${count === 1 ? "invoice" : "invoices"}`
+                        : "not used yet"}{" "}
+                      · edited {formatTimestamp(template.updatedAt)}
                     </p>
                   </div>
                   {isDefault ? <Badge tone="solid">Default</Badge> : null}
@@ -171,7 +181,10 @@ export function TemplatesView() {
                       aria-label={`Make ${template.name} the default`}
                       title={isDefault ? "Already the default" : "Make default"}
                     >
-                      <Star className="h-4 w-4" fill={isDefault ? "currentColor" : "none"} />
+                      <Star
+                        className="h-4 w-4"
+                        fill={isDefault ? "currentColor" : "none"}
+                      />
                     </Button>
                     <Button
                       variant="ghost"

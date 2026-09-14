@@ -37,13 +37,3 @@ export const browserStorage = createJSONStorage(() => ({
     }
   },
 }));
-
-export function clearDemoData() {
-  for (const key of Object.values(STORAGE_KEYS)) {
-    try {
-      window.localStorage.removeItem(key);
-    } catch {
-      // Ignore: storage may be blocked.
-    }
-  }
-}

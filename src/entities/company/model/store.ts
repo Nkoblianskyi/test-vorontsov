@@ -2,22 +2,14 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
 import { browserStorage, STORAGE_KEYS } from "@/shared/lib/storage";
-import type { Currency } from "@/shared/lib/format";
+import {
+  companyProfileSchema,
+  invoicingDefaultsSchema,
+  type CompanyProfile,
+  type InvoicingDefaults,
+} from "./schema";
 
-/** The seller: printed on every invoice, edited once in Settings. */
-export type CompanyProfile = {
-  name: string;
-  address: string;
-  email: string;
-  phone: string;
-  taxId: string;
-};
-
-export type InvoicingDefaults = {
-  prefix: string;
-  paymentTermsDays: number;
-  currency: Currency;
-};
+export type { CompanyProfile, InvoicingDefaults } from "./schema";
 
 export const defaultCompany: CompanyProfile = {
   name: "Northfield Studio, Inc.",
@@ -38,7 +30,10 @@ type CompanyState = {
   invoicing: InvoicingDefaults;
   updateProfile: (profile: CompanyProfile) => void;
   updateInvoicing: (invoicing: InvoicingDefaults) => void;
+  reset: () => void;
 };
+
+type Persisted = Partial<Pick<CompanyState, "profile" | "invoicing">> | undefined;
 
 export const useCompanyStore = create<CompanyState>()(
   persist(
@@ -47,12 +42,24 @@ export const useCompanyStore = create<CompanyState>()(
       invoicing: defaultInvoicing,
       updateProfile: (profile) => set({ profile }),
       updateInvoicing: (invoicing) => set({ invoicing }),
+      reset: () => set({ profile: defaultCompany, invoicing: defaultInvoicing }),
     }),
     {
       name: STORAGE_KEYS.company,
       version: 1,
       storage: browserStorage,
       partialize: (state) => ({ profile: state.profile, invoicing: state.invoicing }),
+      // Each block falls back to its default on its own if the stored copy no longer validates.
+      merge: (persisted, current) => {
+        const saved = persisted as Persisted;
+        const profile = companyProfileSchema.safeParse(saved?.profile);
+        const invoicing = invoicingDefaultsSchema.safeParse(saved?.invoicing);
+        return {
+          ...current,
+          profile: profile.success ? profile.data : current.profile,
+          invoicing: invoicing.success ? invoicing.data : current.invoicing,
+        };
+      },
     },
   ),
 );

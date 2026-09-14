@@ -32,7 +32,9 @@ const monthFormat = new Intl.DateTimeFormat("en-GB", { month: "long", year: "num
 /** Six Monday-first weeks covering the month: the grid never changes height. */
 function monthGrid(year: number, month: number): string[] {
   const offset = (new Date(year, month, 1).getDay() + 6) % 7;
-  return Array.from({ length: 42 }, (_, index) => toIsoDate(new Date(year, month, 1 - offset + index)));
+  return Array.from({ length: 42 }, (_, index) =>
+    toIsoDate(new Date(year, month, 1 - offset + index)),
+  );
 }
 
 function addMonths(iso: string, months: number): string {
@@ -62,21 +64,43 @@ type Props = {
  * month grid and preset buttons ("Today" first). Keyboard: arrows move by day and
  * week, PageUp/PageDown by month, Home/End to the week's ends, Enter picks, Esc closes.
  */
-export function DatePicker({ value, onChange, id, min, invalid, presets = [], onBlur, ...aria }: Props) {
+export function DatePicker({
+  value,
+  onChange,
+  id,
+  min,
+  invalid,
+  presets = [],
+  onBlur,
+  ...aria
+}: Props) {
   const [open, setOpen] = React.useState(false);
   const [focus, setFocus] = React.useState(() => (isIsoDate(value) ? value : todayIso()));
   const triggerRef = React.useRef<HTMLButtonElement>(null);
   const panelRef = React.useRef<HTMLDivElement>(null);
+  /** Set when focus moved by keyboard (or on open): only then does DOM focus follow the grid. */
+  const moveDomFocus = React.useRef(false);
   // The whole calendar, presets included, should be visible: flip up rather than scroll.
-  const position = useFloating(open, triggerRef, { width: 296, preferredHeight: 360, flipBelow: 340 });
+  const position = useFloating(open, triggerRef, {
+    width: 296,
+    preferredHeight: 360,
+    flipBelow: 340,
+  });
   const today = todayIso();
 
   const view = parse(focus);
   const days = monthGrid(view.getFullYear(), view.getMonth());
   const allPresets: DatePreset[] = [{ label: "Today", value: todayIso }, ...presets];
 
+  const clamp = (iso: string) => (min && iso < min ? min : iso);
+
+  const moveTo = (iso: string, fromKeyboard: boolean) => {
+    moveDomFocus.current = fromKeyboard;
+    setFocus(clamp(iso));
+  };
+
   const openPanel = () => {
-    setFocus(isIsoDate(value) ? value : today);
+    moveTo(isIsoDate(value) ? value : today, true);
     setOpen(true);
   };
 
@@ -95,8 +119,11 @@ export function DatePicker({ value, onChange, id, min, invalid, presets = [], on
 
   const positioned = Boolean(position);
   React.useEffect(() => {
-    if (!open || !positioned) return;
-    panelRef.current?.querySelector<HTMLButtonElement>(`[data-date="${focus}"]`)?.focus({ preventScroll: true });
+    if (!open || !positioned || !moveDomFocus.current) return;
+    moveDomFocus.current = false;
+    panelRef.current
+      ?.querySelector<HTMLButtonElement>(`[data-date="${focus}"]`)
+      ?.focus({ preventScroll: true });
   }, [open, positioned, focus]);
 
   const onGridKeyDown = (event: React.KeyboardEvent) => {
@@ -113,10 +140,31 @@ export function DatePicker({ value, onChange, id, min, invalid, presets = [], on
     };
     if (moves[event.key]) {
       event.preventDefault();
-      setFocus(moves[event.key]());
+      moveTo(moves[event.key](), true);
     } else if (event.key === "Enter" || event.key === " ") {
       event.preventDefault();
       pick(focus);
+    }
+  };
+
+  /** Esc closes; tabbing past either end closes and returns to the field instead of the page end. */
+  const onPanelKeyDown = (event: React.KeyboardEvent) => {
+    if (event.key === "Escape") {
+      event.preventDefault();
+      event.stopPropagation();
+      close();
+      return;
+    }
+    if (event.key !== "Tab") return;
+    const focusables = [
+      ...(panelRef.current?.querySelectorAll<HTMLElement>(
+        "button:not([disabled]):not([tabindex='-1'])",
+      ) ?? []),
+    ];
+    const edge = event.shiftKey ? focusables[0] : focusables.at(-1);
+    if (document.activeElement === edge) {
+      event.preventDefault();
+      close();
     }
   };
 
@@ -152,20 +200,14 @@ export function DatePicker({ value, onChange, id, min, invalid, presets = [], on
               ref={panelRef}
               role="dialog"
               aria-label="Choose a date"
-              onKeyDown={(event) => {
-                if (event.key === "Escape") {
-                  event.preventDefault();
-                  event.stopPropagation();
-                  close();
-                }
-              }}
+              onKeyDown={onPanelKeyDown}
               style={floatingStyle(position, true)}
               className="overflow-y-auto border border-ink bg-panel p-3 text-ink shadow-[0_18px_40px_-18px_rgba(0,0,0,.5)]"
             >
               <div className="flex items-center justify-between gap-2 pb-2">
                 <button
                   type="button"
-                  onClick={() => setFocus(addMonths(focus, -1))}
+                  onClick={() => moveTo(addMonths(focus, -1), false)}
                   aria-label="Previous month"
                   className="grid h-8 w-8 place-items-center text-ink-soft hover:bg-panel-sunken hover:text-ink"
                 >
@@ -176,7 +218,7 @@ export function DatePicker({ value, onChange, id, min, invalid, presets = [], on
                 </p>
                 <button
                   type="button"
-                  onClick={() => setFocus(addMonths(focus, 1))}
+                  onClick={() => moveTo(addMonths(focus, 1), false)}
                   aria-label="Next month"
                   className="grid h-8 w-8 place-items-center text-ink-soft hover:bg-panel-sunken hover:text-ink"
                 >
@@ -184,10 +226,18 @@ export function DatePicker({ value, onChange, id, min, invalid, presets = [], on
                 </button>
               </div>
 
-              <div role="grid" aria-label={monthFormat.format(view)} onKeyDown={onGridKeyDown}>
+              <div
+                role="grid"
+                aria-label={monthFormat.format(view)}
+                onKeyDown={onGridKeyDown}
+              >
                 <div role="row" className="grid grid-cols-7 border-b border-rule pb-1">
                   {WEEKDAYS.map((day) => (
-                    <span key={day} role="columnheader" className="text-center text-micro text-ink-faint">
+                    <span
+                      key={day}
+                      role="columnheader"
+                      className="text-center text-micro text-ink-faint"
+                    >
                       {day}
                     </span>
                   ))}
@@ -217,7 +267,8 @@ export function DatePicker({ value, onChange, id, min, invalid, presets = [], on
                               ? "bg-ink font-semibold text-panel"
                               : "hover:bg-panel-sunken",
                             !selected && outside && "text-ink-faint",
-                            disabled && "cursor-not-allowed opacity-30 hover:bg-transparent",
+                            disabled &&
+                              "cursor-not-allowed opacity-30 hover:bg-transparent",
                           )}
                         >
                           {date.getDate()}
@@ -247,7 +298,11 @@ export function DatePicker({ value, onChange, id, min, invalid, presets = [], on
                       type="button"
                       onClick={() => pick(target)}
                       disabled={blocked}
-                      title={blocked ? "Earlier than allowed" : triggerFormat.format(parse(target))}
+                      title={
+                        blocked
+                          ? "Earlier than allowed"
+                          : triggerFormat.format(parse(target))
+                      }
                       className={cn(
                         "border px-2 py-1 text-[0.8125rem] transition-colors disabled:opacity-30",
                         target === value

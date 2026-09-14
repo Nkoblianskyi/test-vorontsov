@@ -2,7 +2,10 @@
  * Brings a form control into view, focuses it and flashes an outline, so a click on
  * the preview visibly lands somewhere. Sections without a native focus get tabindex -1.
  */
-export function focusField(id: string, { click = false }: { click?: boolean } = {}): boolean {
+export function focusField(
+  id: string,
+  { click = false }: { click?: boolean } = {},
+): boolean {
   const element = document.getElementById(id);
   if (!element) return false;
 

@@ -1,7 +1,7 @@
 import type { CSSProperties } from "react";
-import type { TemplateConfig } from "@/entities/template/model/schema";
-import { mix, readableInk, tint } from "@/shared/lib/color";
-import { documentFonts } from "../ui/document-fonts";
+import type { TemplateConfig } from "@/entities/template/@x/invoice";
+import { mix, readableInk } from "@/shared/lib/color";
+import { documentFonts } from "./document-fonts";
 
 const densityScale = {
   compact: { pad: "14mm", block: "6mm", row: "2.6mm" },
@@ -26,7 +26,6 @@ export function swissDocumentStyle(config: TemplateConfig): CSSProperties {
   return {
     "--doc-brand": config.primaryColor,
     "--doc-brand-ink": readableInk(config.primaryColor),
-    "--doc-brand-wash": tint(config.primaryColor, 0.9),
     "--doc-secondary": config.secondaryColor,
     "--doc-secondary-ink": readableInk(config.secondaryColor),
     "--doc-ink": config.inkColor,

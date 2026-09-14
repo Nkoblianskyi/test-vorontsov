@@ -1,14 +1,19 @@
 import type { CSSProperties } from "react";
 
-import type { TemplateConfig } from "@/entities/template/model/schema";
-import { LogoMark } from "@/entities/template/ui/logo-mark";
+import type { TemplateConfig } from "@/entities/template/@x/invoice";
+import { LogoMark } from "@/entities/template/@x/invoice";
 import { mix } from "@/shared/lib/color";
 import { cn } from "@/shared/lib/cn";
-import { formatDate, formatMoney, formatPercent, formatQuantity } from "@/shared/lib/format";
+import {
+  formatDate,
+  formatMoney,
+  formatPercent,
+  formatQuantity,
+} from "@/shared/lib/format";
 import { computeTotals } from "../lib/totals";
 import { paymentLines } from "../lib/payments";
 import type { DocumentParty, InvoiceDocumentData } from "../model/document";
-import { documentFonts } from "./document-fonts";
+import { documentFonts } from "../lib/document-fonts";
 import styles from "./classic-document.module.css";
 
 type Props = {
@@ -50,7 +55,9 @@ function Party({
           ))}
         </div>
       ) : null}
-      {party.taxId ? <p data-edit={buyer ? "buyer.taxId" : undefined}>Tax ID {party.taxId}</p> : null}
+      {party.taxId ? (
+        <p data-edit={buyer ? "buyer.taxId" : undefined}>Tax ID {party.taxId}</p>
+      ) : null}
     </div>
   );
 }
@@ -80,12 +87,17 @@ export function ClassicDocument({ config, data, fluid = false }: Props) {
   const money = (value: number) => formatMoney(value, data.currency);
   const plain = (value: number) => formatMoney(value, data.currency, { symbol: false });
   const date = (iso: string) => formatDate(iso, dateFormat);
-  const payments = fields.paymentDetails.show ? paymentLines(config.payments, data.number) : [];
+  const payments = fields.paymentDetails.show
+    ? paymentLines(config.payments, data.number)
+    : [];
 
   const meta: [label: string, value: string, edit: string][] = [];
-  if (fields.invoiceNumber.show) meta.push([fields.invoiceNumber.label, data.number, "meta.number"]);
-  if (fields.issueDate.show) meta.push([fields.issueDate.label, date(data.issueDate), "meta.issueDate"]);
-  if (fields.dueDate.show) meta.push([fields.dueDate.label, date(data.dueDate), "meta.dueDate"]);
+  if (fields.invoiceNumber.show)
+    meta.push([fields.invoiceNumber.label, data.number, "meta.number"]);
+  if (fields.issueDate.show)
+    meta.push([fields.issueDate.label, date(data.issueDate), "meta.issueDate"]);
+  if (fields.dueDate.show)
+    meta.push([fields.dueDate.label, date(data.dueDate), "meta.dueDate"]);
   if (fields.reference.show && data.reference.trim()) {
     meta.push([fields.reference.label, data.reference, "meta.reference"]);
   }
@@ -143,7 +155,12 @@ export function ClassicDocument({ config, data, fluid = false }: Props) {
       {fields.companyAddress.show || fields.billedTo.show ? (
         <section className={styles.parties}>
           {fields.companyAddress.show ? (
-            <Party caption={fields.companyAddress.label} party={data.seller} upper kind="seller" />
+            <Party
+              caption={fields.companyAddress.label}
+              party={data.seller}
+              upper
+              kind="seller"
+            />
           ) : (
             <div />
           )}
@@ -159,7 +176,9 @@ export function ClassicDocument({ config, data, fluid = false }: Props) {
             <th className={showDescription ? styles.colItem : undefined} data-edit="labels">
               {fields.itemName.label}
             </th>
-            {showDescription ? <th data-edit="labels">{fields.itemDescription.label}</th> : null}
+            {showDescription ? (
+              <th data-edit="labels">{fields.itemDescription.label}</th>
+            ) : null}
             {showQuantity ? (
               <th className={cn(styles.num, styles.colQty)} data-edit="labels">
                 {fields.itemQuantity.label}
@@ -202,7 +221,11 @@ export function ClassicDocument({ config, data, fluid = false }: Props) {
 
       <div className={styles.totals}>
         {fields.subtotal.show ? (
-          <TotalsRow label={fields.subtotal.label} value={plain(totals.subtotal)} edit="subtotal" />
+          <TotalsRow
+            label={fields.subtotal.label}
+            value={plain(totals.subtotal)}
+            edit="subtotal"
+          />
         ) : null}
         {fields.discount.show ? (
           <TotalsRow
@@ -214,19 +237,33 @@ export function ClassicDocument({ config, data, fluid = false }: Props) {
         {fields.taxes.show
           ? totals.taxes.map((tax, index) => (
               <TotalsRow
-                key={index}
+                key={data.taxes[index]?.id ?? index}
                 label={`${tax.name} (${formatPercent(tax.rate)})`}
                 value={plain(tax.amount)}
                 edit={`tax.${index}`}
               />
             ))
           : null}
-        <TotalsRow label={fields.total.label} value={money(totals.total)} strong edit="total" />
+        <TotalsRow
+          label={fields.total.label}
+          value={money(totals.total)}
+          strong
+          edit="total"
+        />
         {fields.paymentMade.show ? (
-          <TotalsRow label={fields.paymentMade.label} value={plain(totals.paid)} edit="paid" />
+          <TotalsRow
+            label={fields.paymentMade.label}
+            value={plain(totals.paid)}
+            edit="paid"
+          />
         ) : null}
         {fields.balanceDue.show ? (
-          <TotalsRow label={fields.balanceDue.label} value={money(totals.balance)} strong edit="balance" />
+          <TotalsRow
+            label={fields.balanceDue.label}
+            value={money(totals.balance)}
+            strong
+            edit="balance"
+          />
         ) : null}
       </div>
 

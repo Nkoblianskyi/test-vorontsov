@@ -1,8 +1,13 @@
 import type { CSSProperties } from "react";
 
-import type { TemplateConfig } from "@/entities/template/model/schema";
-import { LogoMark } from "@/entities/template/ui/logo-mark";
-import { formatDate, formatMoney, formatPercent, formatQuantity } from "@/shared/lib/format";
+import type { TemplateConfig } from "@/entities/template/@x/invoice";
+import { LogoMark } from "@/entities/template/@x/invoice";
+import {
+  formatDate,
+  formatMoney,
+  formatPercent,
+  formatQuantity,
+} from "@/shared/lib/format";
 import { swissDocumentStyle } from "../lib/document-theme";
 import { paymentLines } from "../lib/payments";
 import { computeTotals } from "../lib/totals";
@@ -40,11 +45,20 @@ function Party({
   return (
     <div style={{ maxWidth: "70mm" }} data-edit={buyer ? undefined : "seller"}>
       {caption ? (
-        <p style={{ color: "var(--doc-ink-soft)", fontSize: "0.78em", marginBottom: "1.2mm" }}>
+        <p
+          style={{
+            color: "var(--doc-ink-soft)",
+            fontSize: "0.78em",
+            marginBottom: "1.2mm",
+          }}
+        >
           {caption}
         </p>
       ) : null}
-      <p style={{ fontWeight: 600, marginBottom: "0.8mm" }} data-edit={buyer ? "buyer.name" : undefined}>
+      <p
+        style={{ fontWeight: 600, marginBottom: "0.8mm" }}
+        data-edit={buyer ? "buyer.name" : undefined}
+      >
         {party.name}
       </p>
       {party.lines.length ? (
@@ -92,7 +106,10 @@ function Row({
       }}
     >
       <span style={{ color: strong ? undefined : "var(--doc-ink-soft)" }}>{label}</span>
-      <span className="tnum" style={{ fontWeight: strong ? 600 : 500, whiteSpace: "nowrap" }}>
+      <span
+        className="tnum"
+        style={{ fontWeight: strong ? 600 : 500, whiteSpace: "nowrap" }}
+      >
         {value}
       </span>
     </div>
@@ -109,13 +126,18 @@ export function SwissDocument({ config, data }: Props) {
   const strongRule = "var(--doc-rule-width) solid var(--doc-rule-strong)";
   const banner = config.headerLayout === "banner";
   const stacked = config.headerLayout === "stacked";
-  const payments = fields.paymentDetails.show ? paymentLines(config.payments, data.number) : [];
+  const payments = fields.paymentDetails.show
+    ? paymentLines(config.payments, data.number)
+    : [];
   const logoBox = `${config.logo.size * 0.28}mm`;
 
   const metaRows: [label: string, value: string, edit: string][] = [];
-  if (fields.invoiceNumber.show) metaRows.push([fields.invoiceNumber.label, data.number, "meta.number"]);
-  if (fields.issueDate.show) metaRows.push([fields.issueDate.label, date(data.issueDate), "meta.issueDate"]);
-  if (fields.dueDate.show) metaRows.push([fields.dueDate.label, date(data.dueDate), "meta.dueDate"]);
+  if (fields.invoiceNumber.show)
+    metaRows.push([fields.invoiceNumber.label, data.number, "meta.number"]);
+  if (fields.issueDate.show)
+    metaRows.push([fields.issueDate.label, date(data.issueDate), "meta.issueDate"]);
+  if (fields.dueDate.show)
+    metaRows.push([fields.dueDate.label, date(data.dueDate), "meta.dueDate"]);
   if (fields.reference.show && data.reference.trim()) {
     metaRows.push([fields.reference.label, data.reference, "meta.reference"]);
   }
@@ -195,7 +217,9 @@ export function SwissDocument({ config, data }: Props) {
         {banner ? (
           meta
         ) : stacked ? (
-          <header style={{ display: "flex", flexDirection: "column", gap: "var(--doc-block)" }}>
+          <header
+            style={{ display: "flex", flexDirection: "column", gap: "var(--doc-block)" }}
+          >
             {logo}
             <div
               style={{
@@ -218,7 +242,9 @@ export function SwissDocument({ config, data }: Props) {
               gap: "10mm",
             }}
           >
-            <div style={{ display: "flex", flexDirection: "column", gap: "var(--doc-block)" }}>
+            <div
+              style={{ display: "flex", flexDirection: "column", gap: "var(--doc-block)" }}
+            >
               {title}
               {meta}
             </div>
@@ -237,7 +263,11 @@ export function SwissDocument({ config, data }: Props) {
             }}
           >
             {fields.companyAddress.show ? (
-              <Party caption={fields.companyAddress.label} party={data.seller} kind="seller" />
+              <Party
+                caption={fields.companyAddress.label}
+                party={data.seller}
+                kind="seller"
+              />
             ) : (
               <div />
             )}
@@ -272,7 +302,10 @@ export function SwissDocument({ config, data }: Props) {
             {data.items.map((item, index) => (
               <tr key={item.id} style={{ borderBottom: rule }}>
                 <td style={{ padding: "var(--doc-row) 0", verticalAlign: "top" }}>
-                  <span style={{ fontWeight: 500, display: "block" }} data-edit={`item.${index}.name`}>
+                  <span
+                    style={{ fontWeight: 500, display: "block" }}
+                    data-edit={`item.${index}.name`}
+                  >
                     {item.name}
                   </span>
                   {fields.itemDescription.show && item.description ? (
@@ -291,7 +324,11 @@ export function SwissDocument({ config, data }: Props) {
                   ) : null}
                 </td>
                 {fields.itemQuantity.show ? (
-                  <td className="tnum" style={bodyCell} data-edit={`item.${index}.quantity`}>
+                  <td
+                    className="tnum"
+                    style={bodyCell}
+                    data-edit={`item.${index}.quantity`}
+                  >
                     {formatQuantity(item.quantity)}
                   </td>
                 ) : null}
@@ -315,7 +352,11 @@ export function SwissDocument({ config, data }: Props) {
         <section style={{ display: "flex", justifyContent: "flex-end" }}>
           <div style={{ width: "80mm" }}>
             {fields.subtotal.show ? (
-              <Row label={fields.subtotal.label} value={money(totals.subtotal)} edit="subtotal" />
+              <Row
+                label={fields.subtotal.label}
+                value={money(totals.subtotal)}
+                edit="subtotal"
+              />
             ) : null}
             {fields.discount.show && totals.discount > 0 ? (
               <Row
@@ -331,7 +372,7 @@ export function SwissDocument({ config, data }: Props) {
             {fields.taxes.show
               ? totals.taxes.map((tax, index) => (
                   <Row
-                    key={index}
+                    key={data.taxes[index]?.id ?? index}
                     label={`${tax.name} (${formatPercent(tax.rate)})`}
                     value={money(tax.amount)}
                     edit={`tax.${index}`}
@@ -339,12 +380,25 @@ export function SwissDocument({ config, data }: Props) {
                 ))
               : null}
             <div
-              style={{ borderTop: strongRule, marginTop: "var(--doc-row)", paddingTop: "var(--doc-row)" }}
+              style={{
+                borderTop: strongRule,
+                marginTop: "var(--doc-row)",
+                paddingTop: "var(--doc-row)",
+              }}
             >
-              <Row label={fields.total.label} value={money(totals.total)} strong edit="total" />
+              <Row
+                label={fields.total.label}
+                value={money(totals.total)}
+                strong
+                edit="total"
+              />
             </div>
             {fields.paymentMade.show && totals.paid > 0 ? (
-              <Row label={fields.paymentMade.label} value={`− ${money(totals.paid)}`} edit="paid" />
+              <Row
+                label={fields.paymentMade.label}
+                value={`− ${money(totals.paid)}`}
+                edit="paid"
+              />
             ) : null}
             {fields.balanceDue.show ? (
               <div
@@ -378,7 +432,13 @@ export function SwissDocument({ config, data }: Props) {
               rowGap: "1.2mm",
             }}
           >
-            <p style={{ gridColumn: "1 / -1", fontWeight: 600, color: "var(--doc-secondary)" }}>
+            <p
+              style={{
+                gridColumn: "1 / -1",
+                fontWeight: 600,
+                color: "var(--doc-secondary)",
+              }}
+            >
               {fields.paymentDetails.label}
             </p>
             {payments.map((line) => (
@@ -403,8 +463,16 @@ export function SwissDocument({ config, data }: Props) {
           >
             {hasTerms ? (
               <div data-edit="terms">
-                <p style={{ fontWeight: 600, marginBottom: "1.2mm" }}>{fields.terms.label}</p>
-                <p style={{ color: "var(--doc-ink-soft)", lineHeight: 1.5, whiteSpace: "pre-line" }}>
+                <p style={{ fontWeight: 600, marginBottom: "1.2mm" }}>
+                  {fields.terms.label}
+                </p>
+                <p
+                  style={{
+                    color: "var(--doc-ink-soft)",
+                    lineHeight: 1.5,
+                    whiteSpace: "pre-line",
+                  }}
+                >
                   {data.terms}
                 </p>
               </div>
@@ -413,8 +481,16 @@ export function SwissDocument({ config, data }: Props) {
             )}
             {hasStatement ? (
               <div data-edit="statement">
-                <p style={{ fontWeight: 600, marginBottom: "1.2mm" }}>{fields.statement.label}</p>
-                <p style={{ color: "var(--doc-ink-soft)", lineHeight: 1.5, whiteSpace: "pre-line" }}>
+                <p style={{ fontWeight: 600, marginBottom: "1.2mm" }}>
+                  {fields.statement.label}
+                </p>
+                <p
+                  style={{
+                    color: "var(--doc-ink-soft)",
+                    lineHeight: 1.5,
+                    whiteSpace: "pre-line",
+                  }}
+                >
                   {data.statement}
                 </p>
               </div>

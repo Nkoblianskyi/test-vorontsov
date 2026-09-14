@@ -43,10 +43,15 @@ export function PreviewStage({
 
   const scale = zoom === "fit" ? fitScale : zoom;
   const step = (delta: number) =>
-    setZoom(Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, Math.round((scale + delta) * 100) / 100)));
+    setZoom(
+      Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, Math.round((scale + delta) * 100) / 100)),
+    );
 
   return (
-    <div data-print="shell" className={cn("flex min-h-0 min-w-0 flex-1 flex-col", className)}>
+    <div
+      data-print="shell"
+      className={cn("flex min-h-0 min-w-0 flex-1 flex-col", className)}
+    >
       <div
         data-print="hide"
         className="flex h-12 shrink-0 items-center justify-between gap-3 border-b border-rule bg-panel px-3 sm:px-4"
@@ -54,23 +59,42 @@ export function PreviewStage({
         <div className="flex min-w-0 items-center gap-2">{toolbar}</div>
 
         <div className="flex shrink-0 items-center gap-1">
-          <Button variant="ghost" size="icon" aria-label="Zoom out" onClick={() => step(-0.1)}>
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="Zoom out"
+            onClick={() => step(-0.1)}
+          >
             <Minus className="h-4 w-4" />
           </Button>
-          <span className="tnum w-11 text-center text-[0.8125rem] text-ink-soft" aria-live="polite">
+          <span
+            className="tnum w-11 text-center text-[0.8125rem] text-ink-soft"
+            aria-live="polite"
+          >
             {Math.round(scale * 100)}%
           </span>
-          <Button variant="ghost" size="icon" aria-label="Zoom in" onClick={() => step(0.1)}>
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="Zoom in"
+            onClick={() => step(0.1)}
+          >
             <Plus className="h-4 w-4" />
           </Button>
-          <div className="ml-1 hidden border border-rule sm:flex" role="group" aria-label="Zoom presets">
+          <div
+            className="ml-1 hidden border border-rule sm:flex"
+            role="group"
+            aria-label="Zoom presets"
+          >
             <button
               type="button"
               onClick={() => setZoom("fit")}
               aria-pressed={zoom === "fit"}
               className={cn(
                 "flex items-center gap-1 px-2 py-1 text-[0.8125rem] transition-colors",
-                zoom === "fit" ? "bg-ink text-panel" : "text-ink-soft hover:bg-panel-sunken",
+                zoom === "fit"
+                  ? "bg-ink text-panel"
+                  : "text-ink-soft hover:bg-panel-sunken",
               )}
             >
               <Maximize2 className="h-3.5 w-3.5" />
@@ -84,7 +108,9 @@ export function PreviewStage({
                 aria-pressed={zoom === value}
                 className={cn(
                   "tnum border-l border-rule px-2 py-1 text-[0.8125rem] transition-colors",
-                  zoom === value ? "bg-ink text-panel" : "text-ink-soft hover:bg-panel-sunken",
+                  zoom === value
+                    ? "bg-ink text-panel"
+                    : "text-ink-soft hover:bg-panel-sunken",
                 )}
               >
                 {value * 100}%
@@ -100,7 +126,9 @@ export function PreviewStage({
         onClick={
           onPick
             ? (event) => {
-                const target = (event.target as HTMLElement).closest<HTMLElement>("[data-edit]");
+                const target = (event.target as HTMLElement).closest<HTMLElement>(
+                  "[data-edit]",
+                );
                 if (target?.dataset.edit && event.currentTarget.contains(target)) {
                   onPick(target.dataset.edit, target);
                 }

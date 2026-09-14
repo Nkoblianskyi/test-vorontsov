@@ -115,11 +115,16 @@ export const templateConfigSchema = z.object({
 
 export type TemplateConfig = z.infer<typeof templateConfigSchema>;
 
-export type TemplateRecord = TemplateConfig & {
-  id: string;
-  createdAt: string;
-  updatedAt: string;
-};
+/** Form path of a payment method's on/off switch. */
+export type PaymentToggle = `payments.${keyof TemplateConfig["payments"]}.enabled`;
+
+export const templateRecordSchema = templateConfigSchema.extend({
+  id: z.string().min(1),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+
+export type TemplateRecord = z.infer<typeof templateRecordSchema>;
 
 export function toTemplateConfig(record: TemplateRecord): TemplateConfig {
   const { id: _id, createdAt: _createdAt, updatedAt: _updatedAt, ...config } = record;

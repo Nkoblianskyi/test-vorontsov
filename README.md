@@ -18,18 +18,20 @@ npm run dev          # http://localhost:3000 → /invoices
 npm run build && npm start
 npm run lint         # eslint (next/core-web-vitals + typescript)
 npm run typecheck    # tsc --noEmit
+npm run test         # vitest: суммы, статусы, схемы, форматирование, даты
+npm run format       # prettier
 ```
 
 ## Экраны
 
-| Маршрут | Что это |
-| --- | --- |
-| `/invoices` | Список счетов. KPI: к оплате, просрочено, оплачено за 30 дней, черновики. Фильтры по статусу, поиск, быстрые действия (оплачен / дублировать / удалить) |
-| `/invoices/new`, `/invoices/[id]` | Генератор счёта: форма слева, живой A4-лист справа. Статусы, печать / PDF, дублирование |
-| `/templates` | Галерея шаблонов с живыми миниатюрами: шаблон по умолчанию, выбор редактора, дублирование, удаление |
-| `/templates/[id]` | **Studio** — собственная реализация экрана «Customize» |
-| `/templates/[id]/reference` | **Reference 1:1** — экран из референса |
-| `/settings` | Реквизиты компании, префикс номера, срок оплаты, валюта, сброс демо-данных |
+| Маршрут                           | Что это                                                                                                                                                 |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/invoices`                       | Список счетов. KPI: к оплате, просрочено, оплачено за 30 дней, черновики. Фильтры по статусу, поиск, быстрые действия (оплачен / дублировать / удалить) |
+| `/invoices/new`, `/invoices/[id]` | Генератор счёта: форма слева, живой A4-лист справа. Статусы, печать / PDF, дублирование                                                                 |
+| `/templates`                      | Галерея шаблонов с живыми миниатюрами: шаблон по умолчанию, выбор редактора, дублирование, удаление                                                     |
+| `/templates/[id]`                 | **Studio** — собственная реализация экрана «Customize»                                                                                                  |
+| `/templates/[id]/reference`       | **Reference 1:1** — экран из референса                                                                                                                  |
+| `/settings`                       | Реквизиты компании, префикс номера, срок оплаты, валюта, сброс демо-данных                                                                              |
 
 ## Как проверить задание за 5 минут
 
@@ -48,7 +50,9 @@ npm run typecheck    # tsc --noEmit
 
 ## Стек
 
-Next.js 16 (App Router, Turbopack), React 19, TypeScript (strict), Tailwind CSS 4, react-hook-form + zod, zustand (persist), Radix primitives, lucide-react. Шрифты self-hosted (Archivo, Newsreader).
+Next.js 16 (App Router, Turbopack), React 19, TypeScript (strict), Tailwind CSS 4, react-hook-form + zod, zustand (persist), Radix primitives, lucide-react, Vitest. Шрифты self-hosted (Archivo, Newsreader).
+
+Структура — Feature-Sliced Design (`app → views → widgets → features → entities → shared`), подробно в [docs/architecture.md](docs/architecture.md).
 
 ## Ограничения демо
 

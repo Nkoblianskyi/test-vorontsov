@@ -1,5 +1,5 @@
-import type { CompanyProfile } from "@/entities/company/model/store";
-import { defaultTemplateConfig } from "@/entities/template/model/presets";
+import type { CompanyProfile } from "@/entities/company/@x/invoice";
+import { defaultTemplateConfig } from "@/entities/template/@x/invoice";
 import { addDays, todayIso } from "@/shared/lib/dates";
 import { computeTotals } from "../lib/totals";
 import { sellerParty, type InvoiceDocumentData } from "./document";
@@ -19,7 +19,13 @@ export function referenceSample(
     seller: sellerParty(company),
     buyer: {
       name: "Harborline Logistics, Inc.",
-      lines: ["2200 Market Street,", "Suite 410,", "Philadelphia, Pennsylvania 19103,", "United States,", "+1 215-555-0199"],
+      lines: [
+        "2200 Market Street",
+        "Suite 410",
+        "Philadelphia, Pennsylvania 19103",
+        "United States",
+        "+1 215-555-0199",
+      ],
     },
     items: [
       {
@@ -118,8 +124,20 @@ const seeds: SeedSpec[] = [
         taxId: "",
       },
       items: [
-        { id: "i61", name: "Brand refresh", description: "Menu, signage and social templates", quantity: 1, rate: 2400 },
-        { id: "i62", name: "Photography", description: "Half-day shoot, 30 edited images", quantity: 1, rate: 650 },
+        {
+          id: "i61",
+          name: "Brand refresh",
+          description: "Menu, signage and social templates",
+          quantity: 1,
+          rate: 2400,
+        },
+        {
+          id: "i62",
+          name: "Photography",
+          description: "Half-day shoot, 30 edited images",
+          quantity: 1,
+          rate: 650,
+        },
       ],
       discount: { type: "percent", value: 0 },
       taxes: [{ id: "t61", name: "Sales Tax", rate: 6.625 }],
@@ -142,8 +160,20 @@ const seeds: SeedSpec[] = [
         taxId: "",
       },
       items: [
-        { id: "i51", name: "Web development", description: "Website development with content and SEO optimization", quantity: 1, rate: 1000 },
-        { id: "i52", name: "Hosting setup", description: "Domain, SSL and deployment pipeline", quantity: 1, rate: 180 },
+        {
+          id: "i51",
+          name: "Web development",
+          description: "Website development with content and SEO optimization",
+          quantity: 1,
+          rate: 1000,
+        },
+        {
+          id: "i52",
+          name: "Hosting setup",
+          description: "Domain, SSL and deployment pipeline",
+          quantity: 1,
+          rate: 180,
+        },
       ],
       discount: { type: "amount", value: 80 },
       taxes: [
@@ -169,8 +199,20 @@ const seeds: SeedSpec[] = [
         taxId: "",
       },
       items: [
-        { id: "i41", name: "Patient portal", description: "Appointment booking and reminders, phase one", quantity: 1, rate: 3200 },
-        { id: "i42", name: "Support retainer", description: "Monthly, up to 10 hours", quantity: 1, rate: 450 },
+        {
+          id: "i41",
+          name: "Patient portal",
+          description: "Appointment booking and reminders, phase one",
+          quantity: 1,
+          rate: 3200,
+        },
+        {
+          id: "i42",
+          name: "Support retainer",
+          description: "Monthly, up to 10 hours",
+          quantity: 1,
+          rate: 450,
+        },
       ],
       discount: { type: "percent", value: 0 },
       taxes: [],
@@ -193,8 +235,20 @@ const seeds: SeedSpec[] = [
         taxId: "PL 701 088 4412",
       },
       items: [
-        { id: "i31", name: "Monthly bookkeeping", description: "Ledger upkeep, bank reconciliation and VAT register", quantity: 1, rate: 1450 },
-        { id: "i32", name: "Payroll run", description: "12 employees, social security and income tax filings", quantity: 12, rate: 38 },
+        {
+          id: "i31",
+          name: "Monthly bookkeeping",
+          description: "Ledger upkeep, bank reconciliation and VAT register",
+          quantity: 1,
+          rate: 1450,
+        },
+        {
+          id: "i32",
+          name: "Payroll run",
+          description: "12 employees, social security and income tax filings",
+          quantity: 12,
+          rate: 38,
+        },
       ],
       discount: { type: "percent", value: 5 },
       taxes: [{ id: "t31", name: "VAT", rate: 23 }],
@@ -213,12 +267,25 @@ const seeds: SeedSpec[] = [
       customer: {
         name: "Harborline Logistics, Inc.",
         email: "ap@harborline.example",
-        address: "2200 Market Street, Suite 410\nPhiladelphia, Pennsylvania 19103\nUnited States",
+        address:
+          "2200 Market Street, Suite 410\nPhiladelphia, Pennsylvania 19103\nUnited States",
         taxId: "",
       },
       items: [
-        { id: "i21", name: "Website redesign", description: "Discovery, UX and visual design for 12 page templates", quantity: 1, rate: 4200 },
-        { id: "i22", name: "Content migration", description: "Moving 140 pages from the legacy CMS", quantity: 14, rate: 85 },
+        {
+          id: "i21",
+          name: "Website redesign",
+          description: "Discovery, UX and visual design for 12 page templates",
+          quantity: 1,
+          rate: 4200,
+        },
+        {
+          id: "i22",
+          name: "Content migration",
+          description: "Moving 140 pages from the legacy CMS",
+          quantity: 14,
+          rate: 85,
+        },
       ],
       discount: { type: "percent", value: 0 },
       taxes: [{ id: "t21", name: "Sales Tax", rate: 6 }],
@@ -241,7 +308,13 @@ const seeds: SeedSpec[] = [
         taxId: "GB 284 1170 32",
       },
       items: [
-        { id: "i11", name: "Event microsite", description: "Registration flow and speaker pages", quantity: 36, rate: 70 },
+        {
+          id: "i11",
+          name: "Event microsite",
+          description: "Registration flow and speaker pages",
+          quantity: 36,
+          rate: 70,
+        },
       ],
       discount: { type: "percent", value: 10 },
       taxes: [{ id: "t11", name: "VAT", rate: 20 }],
@@ -279,7 +352,8 @@ export function seedInvoices(today: string): InvoiceRecord[] {
       createdAt: noon(issueDate),
       updatedAt: noon(issueDate),
       sentAt: spec.status === "draft" ? null : noon(issueDate),
-      paidAt: spec.paidDaysAgo !== undefined ? noon(addDays(today, -spec.paidDaysAgo)) : null,
+      paidAt:
+        spec.paidDaysAgo !== undefined ? noon(addDays(today, -spec.paidDaysAgo)) : null,
     };
   });
 }

@@ -15,6 +15,7 @@ export function deepEqual(a: unknown, b: unknown): boolean {
   if (keys.length !== Object.keys(right).length) return false;
 
   return keys.every(
-    (key) => Object.prototype.hasOwnProperty.call(right, key) && deepEqual(left[key], right[key]),
+    (key) =>
+      Object.prototype.hasOwnProperty.call(right, key) && deepEqual(left[key], right[key]),
   );
 }

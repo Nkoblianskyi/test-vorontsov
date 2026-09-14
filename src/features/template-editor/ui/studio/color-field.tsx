@@ -4,7 +4,8 @@ import * as React from "react";
 import { Field } from "@/shared/ui/field";
 import { Input } from "@/shared/ui/input";
 import { cn } from "@/shared/lib/cn";
-import { auditContrast, normalizeHex } from "@/shared/lib/color";
+import { auditContrast } from "@/shared/lib/color";
+import { useHexDraft } from "@/shared/lib/use-hex-draft";
 
 type Props = {
   label: string;
@@ -18,22 +19,7 @@ type Props = {
 
 export function ColorField({ label, value, onChange, swatches, contrast, error }: Props) {
   const id = React.useId();
-  const [draft, setDraft] = React.useState(value);
-  const [lastValue, setLastValue] = React.useState(value);
-
-  // Undo, presets and swatches change the value from outside: adjust during render
-  // rather than in an effect, so the input never paints a stale hex.
-  if (value !== lastValue) {
-    setLastValue(value);
-    setDraft(value);
-  }
-
-  const commit = (next: string) => {
-    const hex = normalizeHex(next);
-    if (hex) onChange(hex);
-    else setDraft(value);
-  };
-
+  const hex = useHexDraft(value, onChange);
   const audit = contrast
     ? auditContrast(contrast.foreground, contrast.background, contrast.label)
     : null;
@@ -45,7 +31,9 @@ export function ColorField({ label, value, onChange, swatches, contrast, error }
       error={error}
       hint={
         audit ? (
-          <span className={cn("inline-flex gap-1.5", audit.level === "fail" && "text-signal")}>
+          <span
+            className={cn("inline-flex gap-1.5", audit.level === "fail" && "text-signal")}
+          >
             <span className="tnum shrink-0">{audit.ratio.toFixed(2)}:1</span>
             {audit.message}
           </span>
@@ -65,39 +53,27 @@ export function ColorField({ label, value, onChange, swatches, contrast, error }
             className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
           />
         </label>
-        <Input
-          id={id}
-          value={draft}
-          spellCheck={false}
-          onChange={(event) => setDraft(event.target.value)}
-          onBlur={(event) => commit(event.target.value)}
-          onKeyDown={(event) => {
-            if (event.key === "Enter") {
-              event.preventDefault();
-              commit(draft);
-            }
-          }}
-          className="tnum uppercase"
-        />
+        <Input id={id} spellCheck={false} className="tnum uppercase" {...hex} />
       </div>
 
       <div className="flex gap-1 pt-1" role="group" aria-label={`${label} swatches`}>
-        {swatches.map((swatch) => (
-          <button
-            key={swatch}
-            type="button"
-            onClick={() => onChange(swatch)}
-            aria-label={`Use ${swatch}`}
-            aria-pressed={swatch.toLowerCase() === value.toLowerCase()}
-            className={cn(
-              "h-5 w-5 border transition-transform",
-              swatch.toLowerCase() === value.toLowerCase()
-                ? "scale-110 border-ink"
-                : "border-rule hover:scale-110",
-            )}
-            style={{ background: swatch }}
-          />
-        ))}
+        {swatches.map((swatch) => {
+          const active = swatch.toLowerCase() === value.toLowerCase();
+          return (
+            <button
+              key={swatch}
+              type="button"
+              onClick={() => onChange(swatch)}
+              aria-label={`Use ${swatch}`}
+              aria-pressed={active}
+              className={cn(
+                "h-5 w-5 border transition-transform",
+                active ? "scale-110 border-ink" : "border-rule hover:scale-110",
+              )}
+              style={{ background: swatch }}
+            />
+          );
+        })}
       </div>
     </Field>
   );

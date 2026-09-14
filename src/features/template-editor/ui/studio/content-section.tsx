@@ -2,7 +2,10 @@
 
 import { Controller, useWatch } from "react-hook-form";
 
-import { contentFieldGroups, type ContentFieldMeta } from "@/entities/template/model/content-fields";
+import {
+  contentFieldGroups,
+  type ContentFieldMeta,
+} from "@/entities/template/model/content-fields";
 import { dateFormatOptions } from "@/shared/lib/format";
 import { todayIso } from "@/shared/lib/dates";
 import { Field, SectionHeading } from "@/shared/ui/field";
@@ -14,7 +17,10 @@ import { useTemplateEditor } from "../../model/use-template-editor";
 
 function FieldRow({ meta }: { meta: ContentFieldMeta }) {
   const { form } = useTemplateEditor();
-  const show = useWatch({ control: form.control, name: `content.fields.${meta.key}.show` as const });
+  const show = useWatch({
+    control: form.control,
+    name: `content.fields.${meta.key}.show` as const,
+  });
 
   return (
     <div

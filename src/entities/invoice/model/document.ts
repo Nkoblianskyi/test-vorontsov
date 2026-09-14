@@ -1,4 +1,4 @@
-import type { CompanyProfile } from "@/entities/company/model/store";
+import type { CompanyProfile } from "@/entities/company/@x/invoice";
 import type { Currency } from "@/shared/lib/format";
 import type { DiscountType, InvoiceInput } from "./schema";
 
@@ -42,9 +42,11 @@ const splitLines = (text: string) =>
 export function sellerParty(company: CompanyProfile): DocumentParty {
   return {
     name: company.name.trim() || "Your company",
-    lines: [...splitLines(company.address), company.phone.trim(), company.email.trim()].filter(
-      Boolean,
-    ),
+    lines: [
+      ...splitLines(company.address),
+      company.phone.trim(),
+      company.email.trim(),
+    ].filter(Boolean),
     taxId: company.taxId.trim() || undefined,
   };
 }
@@ -69,7 +71,9 @@ export function toDocumentData(
     seller: sellerParty(company),
     buyer: {
       name: customer.name?.trim() || (placeholders ? "Customer name" : "—"),
-      lines: [...splitLines(customer.address ?? ""), customer.email?.trim() ?? ""].filter(Boolean),
+      lines: [...splitLines(customer.address ?? ""), customer.email?.trim() ?? ""].filter(
+        Boolean,
+      ),
       taxId: customer.taxId?.trim() || undefined,
     },
     items: (invoice.items ?? []).map((item, index) => ({

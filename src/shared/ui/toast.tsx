@@ -21,12 +21,19 @@ const useToastStore = create<{ items: ToastItem[] }>(() => ({ items: [] }));
 let counter = 0;
 
 export function dismissToast(id: number) {
-  useToastStore.setState((state) => ({ items: state.items.filter((item) => item.id !== id) }));
+  useToastStore.setState((state) => ({
+    items: state.items.filter((item) => item.id !== id),
+  }));
 }
 
 export function toast(title: string, options: { description?: string; tone?: Tone } = {}) {
   const id = ++counter;
-  const item: ToastItem = { id, title, description: options.description, tone: options.tone ?? "neutral" };
+  const item: ToastItem = {
+    id,
+    title,
+    description: options.description,
+    tone: options.tone ?? "neutral",
+  };
   useToastStore.setState((state) => ({ items: [...state.items.slice(-2), item] }));
   window.setTimeout(() => dismissToast(id), options.tone === "danger" ? 6500 : 4000);
 }
@@ -66,7 +73,9 @@ export function Toaster() {
           <div className="min-w-0 flex-1 px-3.5 py-3">
             <p className="text-sm font-medium">{item.title}</p>
             {item.description ? (
-              <p className="mt-0.5 text-micro leading-relaxed text-panel/70">{item.description}</p>
+              <p className="mt-0.5 text-micro leading-relaxed text-panel/70">
+                {item.description}
+              </p>
             ) : null}
           </div>
           <button

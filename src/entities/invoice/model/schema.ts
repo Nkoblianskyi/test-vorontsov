@@ -2,7 +2,7 @@ import { z } from "zod";
 import { currencyValues } from "@/shared/lib/format";
 import { computeTotals } from "../lib/totals";
 
-export const invoiceStatusValues = ["draft", "sent", "paid", "void"] as const;
+export const invoiceStatusValues = ["draft", "sent", "paid"] as const;
 export type InvoiceStatus = (typeof invoiceStatusValues)[number];
 
 export const discountTypeValues = ["percent", "amount"] as const;
@@ -38,7 +38,10 @@ export const invoiceSchema = z
     reference: z.string().max(40),
     customer: z.object({
       name: z.string().trim().min(1, "Who is this invoice for?").max(80),
-      email: z.union([z.literal(""), z.string().trim().email("That email looks incomplete")]),
+      email: z.union([
+        z.literal(""),
+        z.string().trim().email("That email looks incomplete"),
+      ]),
       address: z.string().max(300),
       taxId: z.string().max(40),
     }),
@@ -60,6 +63,7 @@ export const invoiceSchema = z
         message: "Due date can't be before the issue date",
       });
     }
+    const { subtotal, total } = computeTotals(value);
     if (value.discount.type === "percent" && value.discount.value > 100) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
@@ -67,7 +71,13 @@ export const invoiceSchema = z
         message: "A percentage discount tops out at 100%",
       });
     }
-    const { total } = computeTotals(value);
+    if (value.discount.type === "amount" && value.discount.value > subtotal + 0.005) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["discount", "value"],
+        message: "More than the subtotal",
+      });
+    }
     if (value.amountPaid > total + 0.005) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
@@ -88,6 +98,21 @@ export type InvoiceRecord = InvoiceInput & {
   sentAt: string | null;
   paidAt: string | null;
 };
+
+const recordMetaSchema = z.object({
+  id: z.string().min(1),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  sentAt: z.string().nullable(),
+  paidAt: z.string().nullable(),
+});
+
+/** Guards data read back from storage: it may be from an older version or edited by hand. */
+export function isInvoiceRecord(value: unknown): value is InvoiceRecord {
+  return (
+    recordMetaSchema.safeParse(value).success && invoiceSchema.safeParse(value).success
+  );
+}
 
 export function toInvoiceInput(record: InvoiceRecord): InvoiceInput {
   const {
