@@ -1,0 +1,162 @@
+@import "tailwindcss";
+
+/* ---------------------------------------------------------------
+   Invoice Studio — design tokens
+   Swiss grid: hairline rules, pure black ink, one signal colour.
+   The document sheet stays light in every theme: it gets printed.
+---------------------------------------------------------------- */
+
+@theme {
+  --color-canvas: #dcdcd6;
+  --color-panel: #ffffff;
+  --color-panel-sunken: #f4f4f0;
+  --color-ink: #000000;
+  --color-ink-soft: #5c5c58;
+  --color-ink-faint: #8e8e88;
+  --color-rule: #c9c9c2;
+  --color-rule-strong: #000000;
+  --color-signal: #e1301a;
+  --color-signal-ink: #ffffff;
+  --color-sheet: #ffffff;
+  --color-sheet-ink: #111111;
+
+  --font-sans: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-newsreader), Georgia, serif;
+
+  --radius-none: 0px;
+
+  --text-micro: 0.6875rem;
+  --text-micro--line-height: 1rem;
+  --text-mono-num: 0.8125rem;
+}
+
+.theme-dark {
+  --color-canvas: #0e0e0d;
+  --color-panel: #191918;
+  --color-panel-sunken: #111110;
+  --color-ink: #f2f2ee;
+  --color-ink-soft: #a3a39c;
+  --color-ink-faint: #6f6f68;
+  --color-rule: #2e2e2b;
+  --color-rule-strong: #4a4a45;
+  --color-signal: #ff4b32;
+  --color-signal-ink: #0e0e0d;
+}
+
+@layer base {
+  * {
+    border-color: var(--color-rule);
+  }
+
+  html,
+  body {
+    height: 100%;
+  }
+
+  body {
+    background: var(--color-canvas);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-feature-settings:
+      "tnum" 1,
+      "cv05" 1;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-signal);
+    outline-offset: 2px;
+  }
+
+  input,
+  textarea,
+  button,
+  select {
+    font: inherit;
+    color: inherit;
+  }
+
+  ::selection {
+    background: var(--color-signal);
+    color: var(--color-signal-ink);
+  }
+}
+
+@layer utilities {
+  .tnum {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* The one piece of grid decoration: a faint field behind the sheet. */
+  .stage-grid {
+    background-image:
+      linear-gradient(
+        to right,
+        color-mix(in srgb, var(--color-ink) 6%, transparent) 1px,
+        transparent 1px
+      ),
+      linear-gradient(
+        to bottom,
+        color-mix(in srgb, var(--color-ink) 6%, transparent) 1px,
+        transparent 1px
+      );
+    background-size: 24px 24px;
+  }
+
+  .field-label {
+    font-size: var(--text-micro);
+    letter-spacing: 0.01em;
+    color: var(--color-ink-soft);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* --------------------------- print --------------------------- */
+
+@page {
+  size: A4;
+  margin: 0;
+}
+
+@media print {
+  html,
+  body {
+    height: auto !important;
+    overflow: visible !important;
+    background: #ffffff !important;
+  }
+
+  [data-print="hide"] {
+    display: none !important;
+  }
+
+  [data-print="shell"],
+  [data-print="stage"],
+  [data-print="frame"] {
+    display: block !important;
+    height: auto !important;
+    max-height: none !important;
+    width: auto !important;
+    overflow: visible !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: #ffffff !important;
+    border: 0 !important;
+  }
+
+  [data-print="sheet"] {
+    transform: none !important;
+    width: 210mm !important;
+    min-height: 297mm !important;
+    box-shadow: none !important;
+    margin: 0 !important;
+  }
+}
